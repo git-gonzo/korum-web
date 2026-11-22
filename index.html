@@ -504,7 +504,9 @@ function topHtml() {
     (puedeFS() ? '<button class="fs" id="fs">' + (enFS() ? '&#10005;' : '&#9974;') + '</button>' : '') +
     '<button class="fs aj' + (ajAbierto ? ' on' : '') + '" id="ajustes" aria-label="Ajustes">&#9881;</button></span>' +
     (ajAbierto ? '<div class="ajmenu"><button id="cfgEntrar" class="sec">Configurar la mesa (losetas)</button>' +
-      '<div class="nota">Para quien monta la mesa: que losetas hay y donde esta cada una.</div></div>' : '') +
+      '<div class="nota">Para quien monta la mesa: que losetas hay y donde esta cada una.</div>' +
+      // La pagina no hace scroll (es una app), asi que en Bluefy no hay "tirar para recargar"
+      '<button id="recargar" class="sec">Recargar la pagina</button></div>' : '') +
     '</div>';
 }
 
@@ -513,7 +515,12 @@ function ayudaHtml() {
   if (instalada || enFS()) return '';
   if (!ayudaAbierta)
     return '<div class="ayuda"><button id="ayuda" class="mas">Como se pone a pantalla completa?</button></div>';
-  var pasos = esIOS
+  // Bluefy (la web por Bluetooth, en GitHub): iOS no deja pantalla completa a una
+  // app que no sea Safari; llegara con la app propia
+  var pasos = esIOS && navigator.bluetooth
+    ? '<b>iPhone (Bluefy)</b><p>La pantalla completa de verdad llegara con la app de Korum. ' +
+      'Mientras, gira el movil para jugar en horizontal.</p>'
+    : esIOS
     ? '<b>iPhone / iPad</b><ol>' +
       '<li>Toca <b>Compartir</b> (el cuadrado con la flecha) y elige <b>Anadir a pantalla de inicio</b>.</li>' +
       '<li>Abrelo desde el icono nuevo y gira el movil: ahi ya no hay barras.</li>' +
@@ -1101,6 +1108,8 @@ function ata() {
   if (st && st.cfg) { ataCfg(); return; }
   var ce = document.getElementById('cfgEntrar');
   if (ce) ce.onclick = function () { ajAbierto = false; cfgUs = -1; manda({ t: 'cfg', s: 1 }); };
+  var rc = document.getElementById('recargar');
+  if (rc) rc.onclick = function () { location.reload(); };
   var b = document.getElementById('fs');
   if (b) b.onclick = toggleFS;
   var aj = document.getElementById('ajustes');
