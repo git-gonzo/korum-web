@@ -1,0 +1,1279 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1410">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Korum">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Korum</title>
+<!--
+  KORUM - el movil como ficha de personaje (CerebroMovil).
+  ESTE FICHERO ES LA FUENTE. El firmware lleva una copia en MovilPagina.h que
+  genera tools/web2h.py: despues de tocar esto, ejecutarlo (ver LEEME.md).
+  Para verlo en el PC sin placa: abrir index.html?maqueta (carga maqueta.js,
+  que finge ser el cerebro).
+-->
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{background:#1a1410;color:#e8dcc8;
+ font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ -webkit-user-select:none;user-select:none}
+#app{position:fixed;inset:0;height:100dvh;display:flex;flex-direction:column;
+ padding:env(safe-area-inset-top) env(safe-area-inset-right)
+         env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 18px;
+ max-width:560px;width:100%;margin:0 auto}
+.mid{flex:1;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;text-align:center;padding:24px;gap:6px;
+ max-width:460px;width:100%;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:.5px}
+.sub{color:#9a8a72;font-size:14px}
+.gold{color:#c9a227}
+
+/* barra de arriba */
+.top{display:flex;align-items:center;gap:9px;padding:10px 14px;flex:0 0 auto;
+ border-bottom:1px solid #2c241c;font-size:12px;color:#7d6b54}
+.dot{width:8px;height:8px;border-radius:50%;background:#4a8c3f;flex:0 0 8px}
+.dot.off{background:#8c3f3f}
+.top.caido{background:#3a1f1c;color:#e0a89c;border-bottom-color:#7a3a32}
+.top .fs{margin-left:auto;background:0;border:0;color:#9a8a72;font-size:19px;
+ padding:4px 8px;width:auto;min-height:0;margin:0;border-radius:8px}
+.top .yo{margin-left:auto;display:flex;align-items:center;gap:6px;color:#9a8a72}
+.top .yo + .fs{margin-left:0}
+/* ronda 3: pantalla completa y ajustes, siempre a la derecha */
+.top{position:relative}
+.top .dcha{margin-left:auto;display:flex;align-items:center;gap:2px}
+.top .yo + .dcha,.top .pills + .dcha{margin-left:4px}
+.top .dcha .fs{margin:0}
+.top .aj.on{background:#2f261e;color:#e8dcc8}
+.ajmenu{position:absolute;top:100%;right:10px;z-index:30;margin-top:4px;min-width:250px;
+ background:#211a15;border:1px solid #3a2f24;border-radius:12px;padding:8px;
+ box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.ajmenu button{margin:0;text-align:left;font-size:15px}
+.ajmenu .nota{font-size:11.5px;color:#7d6b54;padding:7px 4px 2px;line-height:1.4}
+/* el titulo de los botones ("Elige tu raza") y el nombre del heroe */
+.acciones .pregunta{grid-column:1/-1;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+ color:#c9a227;text-align:center;padding:2px 0 0}
+.acciones .nombre{grid-column:1/-1;display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
+.acciones .nombre label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#c9a227;text-align:center}
+.acciones .nombre input{width:100%;padding:12px 14px;font-size:18px;border-radius:12px;text-align:center;
+ background:#120e0b;color:#e8dcc8;border:1px solid #6d5e4b;text-transform:uppercase;letter-spacing:2px;
+ font-family:inherit;outline:none}
+.acciones .nombre input:focus{border-color:#c9a227}
+.acciones .nombre input::placeholder{text-transform:none;letter-spacing:0;color:#6d5e4b;font-size:14px}
+.acciones.tres{grid-template-columns:repeat(3,1fr)}
+.color{width:12px;height:12px;border-radius:50%;flex:0 0 12px;
+ box-shadow:0 0 0 2px #1a1410,0 0 0 3px #3a2f24}
+
+/* esperando figura */
+.disco{width:132px;height:132px;border-radius:50%;margin:8px 0 20px;
+ border:2px solid #3a2f24;display:grid;place-items:center;position:relative}
+.disco::before,.disco::after{content:"";position:absolute;inset:-2px;
+ border-radius:50%;border:2px solid #c9a227;opacity:0;
+ animation:ping 2.4s cubic-bezier(.2,.6,.3,1) infinite}
+.disco::after{animation-delay:1.2s}
+@keyframes ping{0%{transform:scale(.72);opacity:.55}100%{transform:scale(1.28);opacity:0}}
+.disco svg{width:62px;height:62px;opacity:.85}
+@media (prefers-reduced-motion:reduce){.disco::before,.disco::after{animation:none;opacity:.3}}
+
+/* cabecera del heroe */
+.heroe{background:#241d17;border:1px solid #3a2f24;border-radius:14px;padding:13px 15px}
+.heroe .fila1{display:flex;align-items:baseline;gap:10px}
+.nombre{font-size:23px;font-weight:700;letter-spacing:.5px;line-height:1.1}
+.oficio{color:#9a8a72;font-size:13.5px;margin-top:2px}
+.oro{margin-left:auto;color:#c9a227;font-weight:700;font-size:17px;white-space:nowrap}
+.bar{height:9px;border-radius:5px;background:#332a21;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:#7ba05b;transition:width .3s}
+.bar.low i{background:#c25a4a}
+.bar.xp{height:5px}
+.bar.xp i{background:#8a7bc2}
+.linea{display:flex;justify-content:space-between;align-items:baseline;
+ font-size:12.5px;color:#9a8a72;margin-top:9px}
+.linea b{color:#e8dcc8;font-size:14px}
+
+/* pestanas */
+.tabs{display:flex;flex:0 0 auto;border-bottom:1px solid #2c241c;
+ width:100%;max-width:560px;margin:0 auto}
+.tabs button{flex:1;background:0;color:#7d6b54;border:0;border-radius:0;margin:0;
+ min-height:44px;font-size:14px;border-bottom:2px solid transparent;padding:8px}
+.tabs button.on{color:#c9a227;border-bottom-color:#c9a227}
+.tabs .badge{display:inline-block;width:7px;height:7px;border-radius:50%;
+ background:#c9a227;margin-left:5px;vertical-align:2px}
+
+/* el cartel del cerebro */
+.cartel{margin-top:14px;background:#241d17;border:2px solid #c9a227;border-radius:14px;
+ padding:16px 16px 18px;text-align:center}
+.cartel .tt{font-size:19px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.cartel .tx{margin-top:8px;font-size:16px;line-height:1.5;white-space:pre-line}
+.cartel.nuevo{animation:entra .28s ease-out}
+@keyframes entra{from{transform:translateY(8px);opacity:.3}to{transform:none;opacity:1}}
+.calma{margin-top:14px;text-align:center;color:#9a8a72;font-size:14px;padding:22px 10px;
+ border:1px dashed #3a2f24;border-radius:14px}
+.calma b{display:block;color:#e8dcc8;font-size:16px;margin-bottom:3px}
+
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;
+ color:#7d6b54;margin:22px 0 8px;font-weight:600}
+.diario{list-style:none;padding:0;margin:0}
+.diario li{padding:7px 11px;border-left:3px solid #3a2f24;margin-bottom:5px;
+ background:#211a15;border-radius:0 8px 8px 0;font-size:13.5px}
+
+.skills{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px}
+.sk{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;
+ border-bottom:1px solid #2c241c;padding:5px 0}
+.sk span{color:#9a8a72}
+.sk b{color:#e8dcc8;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#2f261e;border:1px solid #3a2f24;border-radius:20px;
+ padding:5px 11px;font-size:13px}
+.chip.vacio{color:#6d5e4b;font-style:italic;border-style:dashed}
+/* ── El arte (/art/<nombre>.webp, del cerebro). Si una no esta, se quita sola ── */
+.chip{display:inline-flex;align-items:center;gap:5px}
+.chip img{width:22px;height:22px;margin:-3px 0 -3px -5px}
+.heroe .avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;object-position:50% 12%;
+ flex:0 0 50px;align-self:center;border:2px solid #3a2f24;background:#120e0b}
+.heroe .fila1{align-items:center}
+.cartel .banda{display:block;width:calc(100% + 32px);margin:-16px -16px 12px;height:150px;object-fit:cover;
+ object-position:50% 40%;border-radius:12px 12px 0 0;background:#120e0b}
+.cartel .banda.bicho{object-fit:contain;background:radial-gradient(#3a2620,#120e0b 70%)}
+.cartel .cara{display:block;width:96px;height:96px;margin:0 auto 10px;border-radius:50%;object-fit:cover;
+ border:3px solid currentColor;background:#120e0b}
+.cartel .cosa{display:block;width:72px;height:72px;margin:0 auto 6px}
+/* En horizontal no hay alto para una banda: la imagen va de fondo del cartel,
+   apagada, y el texto se lee encima. El NPC, pequeno al lado del titulo */
+.horiz .cartel{position:relative;overflow:hidden;isolation:isolate}
+.horiz .cartel .banda{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0;z-index:-1;opacity:.38}
+.horiz .cartel .banda.bicho{object-fit:cover;object-position:50% 30%;opacity:.42}
+.horiz .cartel:has(.banda)::before{content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(rgba(36,29,23,.25),rgba(36,29,23,.88) 70%)}
+.horiz .cartel .cara{width:58px;height:58px;margin:-4px auto 4px}
+.horiz .cartel .cosa{width:48px;height:48px;margin-bottom:2px}
+.acciones button .ico{display:block;margin:0 auto 4px;width:100%;height:78px;object-fit:cover;
+ object-position:50% 8%;border-radius:8px}
+.acciones button .mini{width:26px;height:26px;vertical-align:middle;margin:-4px 6px -4px -2px}
+.acciones button.conIco{padding-top:6px}
+.horiz .acciones button .ico{height:52px}
+.portada{position:absolute;inset:0;z-index:-1;background:#1a1410 center/cover no-repeat;opacity:.28}
+.portada::after{content:"";position:absolute;inset:0;background:radial-gradient(transparent 30%,#1a1410 85%)}
+.compa{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2c241c;
+ font-size:14px}
+.compa .e{margin-left:auto;color:#9a8a72;font-size:13px}
+.compa.off{opacity:.5}
+.compa .tu{color:#c9a227;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.aviso{background:#2f2718;border:1px solid #c9a227;border-radius:11px;
+ padding:10px 13px;margin-top:12px;font-size:14px}
+.enfig{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;color:#9a8a72}
+.enfig b{color:#e8dcc8;font-weight:600}
+.enfig .pto{flex:0 0 10px;height:10px;border-radius:50%;background:#6d5e4b}
+.enfig.ok .pto{background:#6fbf73}
+.enfig.mal .pto{background:#d0624f}
+.enfig.pend .pto{background:#c9a227}
+
+/* mapa */
+.mapa{margin-top:10px;background:#15100c;border:1px solid #2c241c;border-radius:14px;
+ padding:6px}
+.mapa svg{display:block;width:100%;height:auto;max-height:58vh}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#9a8a72;margin-top:8px}
+.leyenda span{display:flex;align-items:center;gap:5px}
+
+button{font:inherit;font-weight:600;font-size:16px;border:0;border-radius:11px;
+ padding:14px 18px;background:#c9a227;color:#1a1410;width:100%;
+ min-height:52px;cursor:pointer;transition:.12s;margin-top:14px}
+button:active{transform:scale(.97)}
+button[disabled]{background:#332a21;color:#6d5e4b}
+button.sec{background:#2f261e;color:#e8dcc8;border:1px solid #3a2f24}
+button.ghost{background:0;border:1px solid #3a2f24;color:#9a8a72;font-size:14px;
+ min-height:44px;padding:10px}
+
+/* la franja de abajo: las opciones del cartel, siempre a la vista */
+.acciones{flex:0 0 auto;width:100%;max-width:560px;margin:0 auto;
+ padding:10px 14px 12px;background:#1a1410;border-top:1px solid #2c241c;
+ display:grid;grid-template-columns:1fr;gap:8px}
+.acciones.dos{grid-template-columns:1fr 1fr}
+.acciones button{margin:0;min-height:54px;padding:10px 8px;font-size:15.5px;line-height:1.2}
+.acciones button.sec{background:#2f261e;color:#e8dcc8;border:1px solid #3a2f24}
+.acciones .menu{display:flex;gap:8px}
+.acciones .menu button{flex:1}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 52px);
+ transform:translateX(-50%);background:#2f2718;border:1px solid #c9a227;color:#e8dcc8;
+ padding:9px 16px;border-radius:22px;font-size:14px;font-weight:600;z-index:9;
+ box-shadow:0 6px 24px #0008;white-space:nowrap;max-width:92vw;overflow:hidden;
+ text-overflow:ellipsis;transition:opacity .4s}
+.toast.fuera{opacity:0}
+
+.ayuda{font-size:11.5px;color:#6d5e4b;text-align:center;padding:4px 16px 8px;
+ flex:0 0 auto;line-height:1.4}
+.ayuda button.mas{background:0;border:0;color:#9a8a72;font-size:11.5px;padding:7px 0;
+ margin:0;min-height:0;width:auto;text-decoration:underline;font-weight:400}
+.ayuda.abierta{text-align:left;color:#9a8a72;max-height:46vh;overflow-y:auto;padding:12px 16px}
+.ayuda.abierta b{color:#e8dcc8}
+.ayuda.abierta ol{margin:7px 0 2px;padding-left:20px}
+.ayuda.abierta li{margin-bottom:7px;line-height:1.5}
+.ayuda.abierta button.mas{display:block;margin:4px auto 0}
+
+/* Horizontal (el movil girado): dos columnas. A la izquierda el mapa, la hoja o el
+   diario; a la derecha el heroe, el cartel y sus opciones, siempre a la vista */
+.horiz{flex:1;display:flex;min-height:0}
+.horiz .izq{flex:1 1 56%;display:flex;flex-direction:column;min-width:0;
+ border-right:1px solid #2c241c}
+.horiz .der{flex:1 1 44%;display:flex;flex-direction:column;min-width:0;max-width:460px}
+.horiz .main{max-width:none;padding:8px 14px 10px}
+.horiz .tabs{max-width:none}
+.horiz .tabs button{min-height:36px;padding:5px}
+.horiz .acciones{max-width:none;padding:8px 12px 10px}
+.horiz .acciones button{min-height:46px;font-size:15px}
+.horiz .heroe{padding:8px 12px}
+.horiz .nombre{font-size:19px}
+.horiz .linea{margin-top:5px}
+.horiz .barras{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end}
+.horiz .bar.xp{height:9px}
+.horiz .oficio{margin-top:0}
+.horiz .cartel{margin-top:9px;padding:11px 12px 13px}
+.horiz .cartel .tt{font-size:16.5px}
+.horiz .cartel .tx{font-size:15px;margin-top:5px}
+.horiz .calma{margin-top:9px;padding:14px 10px}
+.horiz .mapa{margin-top:4px}
+.horiz .mapa svg{max-height:calc(100dvh - 132px)}
+.horiz h2:first-child{margin-top:6px}
+/* Configurar la mesa */
+.pasos{margin:4px 0 0;padding:0;list-style:none;counter-reset:p;font-size:13.5px;color:#9a8a72}
+.pasos li{counter-increment:p;display:flex;gap:9px;margin-bottom:6px;line-height:1.4}
+.pasos li::before{content:counter(p);flex:0 0 20px;height:20px;border-radius:50%;background:#2f261e;
+ color:#c9a227;font-weight:700;font-size:12px;display:grid;place-items:center;margin-top:1px}
+.pasos b{color:#e8dcc8}
+.sel{background:#241d17;border:2px solid #c9a227;border-radius:14px;padding:11px 13px;margin-top:10px}
+.sel .n{font-size:20px;font-weight:800}
+.sel .e{font-size:13px;color:#9a8a72;margin-top:2px}
+.sel .pista{font-size:14px;margin-top:8px;color:#e8dcc8}
+.fila{display:flex;gap:8px}
+.fila button{flex:1;margin-top:10px}
+.lista{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.lista button{width:auto;min-height:40px;margin:0;padding:6px 14px;border-radius:20px;font-size:15px;
+ background:#2f261e;color:#e8dcc8;border:1px solid #3a2f24}
+.lista button.on{background:#c9a227;color:#1a1410;border-color:#c9a227}
+.lista button.muda{color:#d0624f;border-style:dashed}
+select{font:inherit;font-size:15px;width:100%;background:#241d17;color:#e8dcc8;border:1px solid #3a2f24;
+ border-radius:10px;padding:10px;margin-top:8px}
+.cfg svg .hueco{cursor:pointer}
+.cfg svg .lt{cursor:pointer}
+.peligro{color:#d0624f;border-color:#5a2d26 !important}
+.aviso.malo{border-color:#d0624f;background:#3a1f1c}
+/* Rueda de espera (notas de Gonzalo, A1 A3 A4): un aro con degradado que gira.
+   El retraso negativo (__GIRO__, ver pon) la deja donde iba al repintar */
+.rueda{width:54px;height:54px;border-radius:50%;margin:4px auto 12px;flex:0 0 auto;
+ background:conic-gradient(from 0deg,rgba(201,162,39,0) 0deg,rgba(201,162,39,.12) 120deg,#c9a227 320deg,#f6dc84 360deg);
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));
+ mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));
+ animation:gira 1.1s linear infinite}
+.rueda.peq{width:34px;height:34px;margin:0 auto 8px;
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+ mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px))}
+@keyframes gira{to{transform:rotate(360deg)}}
+.espera{position:relative;width:132px;height:132px;margin:8px 0 18px;flex:0 0 auto}
+.espera .rueda{position:absolute;inset:0;width:auto;height:auto;margin:0}
+.espera svg{position:absolute;left:35px;top:35px;width:62px;height:62px;opacity:.85}
+.estado{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#c9a227;font-weight:700}
+@media (prefers-reduced-motion:reduce){.rueda{animation-duration:3s}}
+/* Una X roja que se dibuja (A5: no ha llegado la figura) */
+.cruz{width:84px;height:84px;margin:4px 0 12px;animation:sacude .4s ease-in-out .95s}
+.cruz circle{fill:none;stroke:#d0624f;stroke-width:4;stroke-dasharray:227;stroke-dashoffset:227;
+ animation:traza .5s ease-out forwards}
+.cruz path{fill:none;stroke:#d0624f;stroke-width:7;stroke-linecap:round;stroke-dasharray:38;stroke-dashoffset:38;
+ animation:traza .22s ease-out forwards}
+.cruz path:nth-of-type(1){animation-delay:.45s}
+.cruz path:nth-of-type(2){animation-delay:.68s}
+@keyframes traza{to{stroke-dashoffset:0}}
+/* En las fotos del catalogo (Chrome sin ventana no avanza las animaciones), la X ya dibujada */
+.foto .cruz,.foto .cruz *{animation:none!important;stroke-dashoffset:0!important}
+@keyframes sacude{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+h1.mal{color:#e07a66}
+/* Figura encontrada (ronda 4, A3 -> A8): el aro verde se cierra (0,7 s), la figura
+   se va y entra el check, el aro late con un anillo que se desvanece y a los 2 s
+   cambia de pantalla (EXITO_MS) */
+.espera.ok .aro{position:absolute;left:0;top:0;width:100%;height:100%;opacity:1;transform:rotate(-90deg)}
+.espera.ok .aro circle{fill:none;stroke:#6fbf73;stroke-width:7;stroke-linecap:round;
+ stroke-dasharray:393;stroke-dashoffset:275;animation:cierra .7s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes cierra{to{stroke-dashoffset:0}}
+.espera.ok{border-radius:50%;animation:brilla .5s ease-out .6s forwards}
+@keyframes brilla{to{box-shadow:0 0 22px rgba(111,191,115,.35),inset 0 0 14px rgba(111,191,115,.18)}}
+.espera.ok::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid #6fbf73;opacity:0;
+ animation:late-ok 1s ease-out .7s forwards}
+@keyframes late-ok{0%{transform:scale(1);opacity:.8;border-width:4px}100%{transform:scale(2.6);opacity:0;border-width:1px}}
+/* Crear el heroe (ronda 4, C1): pantalla propia, sin mapa */
+.crear{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:8px;text-align:center;padding:14px 16px 18px;width:100%;max-width:760px;margin:0 auto}
+.crear .paso{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#7d6b54}
+.crear h1{margin:0}
+.crear .sub b{letter-spacing:1px}
+.crear .mas{background:0;border:0;color:#9a8a72;font-size:13px;padding:2px 0;margin:0;min-height:0;width:auto;
+ text-decoration:underline;font-weight:400}
+.crear .nombreIn{width:100%;max-width:360px;padding:14px 16px;font-size:22px;border-radius:12px;text-align:center;
+ background:#120e0b;color:#e8dcc8;border:1px solid #6d5e4b;text-transform:uppercase;letter-spacing:3px;
+ font-family:inherit;outline:none;margin-top:6px}
+.crear .nombreIn:focus{border-color:#c9a227}
+.crear .nombreIn::placeholder{text-transform:none;letter-spacing:0;color:#6d5e4b;font-size:16px}
+.crear #nombreOk{max-width:360px;margin-top:6px}
+.cartas{--h:min(34dvh,230px);display:grid;grid-template-columns:repeat(3,minmax(0,calc(var(--h) / 2 + 14px)));
+ justify-content:center;gap:10px;margin-top:8px;width:100%}
+.cartas.cuatro{--h:min(30dvh,260px);grid-template-columns:repeat(2,minmax(0,calc(var(--h) / 2 + 14px)))}
+.crear.h .cartas{--h:min(calc(100dvh - 205px),260px)}
+.crear.h .cartas.cuatro{--h:min(calc(100dvh - 205px),260px);grid-template-columns:repeat(4,minmax(0,calc(var(--h) / 2 + 14px)))}
+.cartas button{margin:0;min-height:0;width:100%;min-width:0;padding:6px 6px 8px;background:#211a15;color:#e8dcc8;
+ border:1px solid #3a2f24;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px}
+.cartas button:active{border-color:#c9a227}
+.cartas .lamina{display:block;width:100%;height:auto;aspect-ratio:1/2;max-height:var(--h);object-fit:contain;
+ border-radius:8px;background:#120e0b}
+.espera.ok .fig{animation:se-va .3s ease-in .15s forwards}
+@keyframes se-va{to{transform:scale(.4);opacity:0}}
+.espera.ok .check{position:absolute;left:35px;top:35px;width:62px;height:62px;transform:scale(.6);opacity:0;
+ animation:entra-ok .35s cubic-bezier(.3,1.6,.5,1) .4s forwards}
+.espera.ok .check path{stroke-dasharray:50;stroke-dashoffset:50;animation:traza .35s ease-out .5s forwards}
+@keyframes entra-ok{to{transform:scale(1);opacity:1}}
+.estado.ok{color:#6fbf73;animation:entra .3s ease-out .5s both}
+.foto .espera.ok *,.foto .espera.ok::after,.foto .estado.ok{animation:none!important}
+.foto .espera.ok .aro circle,.foto .espera.ok .check path{stroke-dashoffset:0}
+.foto .espera.ok .fig{opacity:0}
+.foto .espera.ok{box-shadow:0 0 22px rgba(111,191,115,.35),inset 0 0 14px rgba(111,191,115,.18)}
+.foto .espera.ok .check{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+ .espera.ok *,.espera.ok::after{animation-duration:.01s!important;animation-delay:0s!important}}
+/* El cartel anterior, si el nuevo lo ha pisado enseguida */
+.pisado{margin-top:12px;border:1px solid #3a2f24;border-left:4px solid #c9a227;border-radius:10px;
+ background:#211a15;padding:8px 11px;font-size:13.5px;color:#cbbda6;animation:entra .28s ease-out}
+.pisado b{display:block;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;margin-bottom:1px}
+/* Como se mueve: con la figura, no con un boton */
+.mover{display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 11px;border-radius:10px;
+ background:#262019;border:1px dashed #e8dcc8;font-size:14px;text-align:left}
+.mover svg{flex:0 0 30px;height:30px}
+.mapa .va{animation:late 1.4s ease-in-out infinite}
+@keyframes late{50%{stroke-opacity:.25}}
+/* Heroe y Mesa: los dos menus, siempre abajo */
+.barra{display:flex;gap:8px;margin-top:8px}
+.barra button{flex:1;margin:0;min-height:40px;padding:6px 8px;font-size:14px;background:#211a15;color:#cbbda6;
+ border:1px solid #3a2f24}
+.barra button b{color:#c9a227;margin-right:5px}
+.acciones.muchas button{min-height:44px;font-size:14.5px}
+.horiz .acciones.muchas{grid-template-columns:repeat(3,1fr);gap:6px}
+.horiz .acciones.muchas button{min-height:38px;font-size:13.5px;padding:6px 4px}
+/* En horizontal, Heroe y Mesa van arriba, en la barra: abajo no hay sitio */
+.top .pills{margin-left:auto;display:flex;gap:6px}
+.top .pills button{width:auto;min-height:0;margin:0;padding:3px 12px;border-radius:16px;font-size:13px;
+ background:#211a15;color:#cbbda6;border:1px solid #3a2f24}
+.top .pills button b{color:#c9a227;margin-right:4px}
+.top .pills + .yo{margin-left:8px}
+@media (orientation:landscape) and (max-height:520px){
+ .top{padding:4px 12px}
+ .top .fs{padding:0 6px;font-size:17px;line-height:1.2}
+ .mid{padding:12px 24px}
+ .disco{width:96px;height:96px;margin:4px 0 10px}
+ .disco svg{width:46px;height:46px}
+}
+</style>
+<script>
+// En el PC, index.html?maqueta carga un cerebro de mentira (maqueta.js). En la
+// placa la url nunca lleva eso y esto no hace nada.
+if (location.search.indexOf('maqueta') >= 0) document.write('<script src="maqueta.js"><\/script>');
+// index.html?catalogo=E2: una pantalla fija del catalogo (catalogo.js), para las fotos
+else if (location.search.indexOf('catalogo') >= 0) document.write('<script src="catalogo.js"><\/script>');
+</script>
+<script src="ble.js"></script>
+</head><body><div id="app"></div><div id="toast" class="toast fuera"></div>
+<script>
+var app = document.getElementById('app');
+var ws = null, st = null, vivo = false;
+var tk = '';
+try { tk = localStorage.getItem('korum_movil_tk') || ''; } catch (e) {}
+var tab = 'juego';
+try { tab = localStorage.getItem('korum_movil_tab') || 'juego'; } catch (e) {}
+var vistoLog = -1;          // ultimo suceso del diario que ya se ha avisado
+var mapaNuevo = false;
+
+// Colores de cada tipo de suceso (MesaSuceso: nada, info, dano, cura, xp, oro, objeto, nivel)
+var COL = ['#c9a227', '#c9a227', '#d0624f', '#7ba05b', '#8a7bc2', '#c9a227', '#4fa3c9', '#d98fe0'];
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) {
+    return c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&amp;';
+  });
+}
+
+/* ── Pantalla completa (ver CerebroKorum: Android si, iOS solo instalandola) ── */
+var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+var instalada = window.navigator.standalone === true ||
+  (window.matchMedia && (window.matchMedia('(display-mode: fullscreen)').matches ||
+                         window.matchMedia('(display-mode: standalone)').matches));
+function puedeFS() { return !!document.fullscreenEnabled && !instalada; }
+function enFS() { return !!document.fullscreenElement; }
+// Se juega en horizontal. Chrome solo deja fijar la orientacion estando ya a
+// pantalla completa; Safari en iPhone no tiene ninguna de las dos cosas
+var pidiendoFS = false;
+function entrarFS() {
+  var e = document.documentElement;
+  if (!e.requestFullscreen) { toast('Este navegador no tiene pantalla completa', 1); return; }
+  if (pidiendoFS) return;
+  pidiendoFS = true;
+  // Hay navegadores que no contestan nunca (ni si ni no): que no bloquee el siguiente toque
+  setTimeout(function () { pidiendoFS = false; }, 1500);
+  var p;
+  try { p = e.requestFullscreen({ navigationUI: 'hide' }); }
+  catch (x) { pidiendoFS = false; toast('Pantalla completa: ' + (x && (x.name || x.message)), 1); return; }
+  if (p && p.then) p.then(function () {
+    pidiendoFS = false;
+    try {
+      if (screen.orientation && screen.orientation.lock)
+        screen.orientation.lock('landscape').catch(function (x) { toast('No deja girarla sola: gira el movil', 1); });
+    } catch (x) {}
+  }).catch(function (x) {
+    // Que se vea por que: callado no hay forma de saber que ha pasado en el movil
+    pidiendoFS = false;
+    toast('Pantalla completa: ' + (x && (x.message || x.name) || 'no'), 1);
+  });
+  else pidiendoFS = false;
+}
+var autoFS = true;            // el primer toque la pone a pantalla completa
+try { autoFS = localStorage.getItem('korum_fs_no') !== '1'; } catch (e) {}
+function toggleFS() {
+  if (enFS()) {
+    autoFS = false;           // la ha quitado a proposito: que no vuelva sola
+    try { localStorage.setItem('korum_fs_no', '1'); } catch (e) {}
+    document.exitFullscreen();
+    return;
+  }
+  autoFS = true;
+  try { localStorage.removeItem('korum_fs_no'); } catch (e) {}
+  entrarFS();
+}
+// Los navegadores solo dejan poner la pantalla completa tras un toque: el
+// primero que haga el jugador, en cualquier sitio, sirve (y el boton sigue
+// haciendo lo suyo). Si sale con el gesto de atras, el siguiente toque la
+// vuelve a poner; con la X de arriba, no
+// pointerup ademas de click: si la pagina se repinta entre que el dedo baja y
+// sube, el elemento tocado ya no existe y Chrome no manda el click
+var avisadoSinFS = false;
+function toqueFS(ev) {
+  if (!autoFS || enFS() || instalada) return;
+  if (ev.target && ev.target.id === 'fs') return;
+  if (!document.fullscreenEnabled) {
+    if (!avisadoSinFS && !esIOS) { avisadoSinFS = true; toast('Este navegador no deja la pantalla completa: abrela en Chrome', 1); }
+    return;
+  }
+  entrarFS();
+}
+document.addEventListener('pointerup', toqueFS, true);
+document.addEventListener('click', toqueFS, true);
+document.addEventListener('fullscreenchange', function () {
+  if (!enFS()) { try { screen.orientation.unlock(); } catch (x) {} }
+  pinta();
+});
+
+// Dos columnas cuando el movil esta girado (y la pantalla es ancha)
+var mqHoriz = window.matchMedia ? window.matchMedia('(orientation: landscape) and (min-width: 560px)') : null;
+function horizontal() { return !!(mqHoriz && mqHoriz.matches); }
+function alGirar() { if (typeof pinta === 'function') pinta(); }
+window.addEventListener('resize', alGirar);
+window.addEventListener('orientationchange', function () { setTimeout(alGirar, 150); });
+// El 'resize' no siempre llega al girar (ni en la emulacion del PC): la consulta
+// avisa ella misma. addListener para los Safari viejos
+if (mqHoriz) {
+  if (mqHoriz.addEventListener) mqHoriz.addEventListener('change', alGirar);
+  else if (mqHoriz.addListener) mqHoriz.addListener(alGirar);
+}
+
+// El arte lo sirve el cerebro en /art/ (el catalogo de fotos lo cambia por la carpeta del repo)
+var ARTE = window.ARTE_BASE || 'art/';
+function arte(n, cls) {
+  return n ? '<img class="' + cls + '" src="' + ARTE + esc(n) + '.webp" alt="" onerror="this.remove()">' : '';
+}
+// Ronda 3: configurar la mesa va escondido en la rueda de ajustes (es del que la monta)
+var ajAbierto = false;
+function topHtml() {
+  var yo = st && st.h ? '<span class="yo"><span class="color" style="background:' + st.h.col +
+    '"></span>tu color</span>' : '';
+  var pills = st && st.v && !st.cfg && st.mn !== 0 && horizontal() ?
+    '<span class="pills">' + menusHtml() + '</span>' : '';
+  return '<div class="top' + (vivo ? '' : ' caido') + '">' +
+    '<span class="dot ' + (vivo ? '' : 'off') + '"></span>' +
+    '<span>' + (!vivo ? 'sin conexion, volviendo...' :
+                st && st.v && horizontal() ? juegoTxt() : 'conectado a la mesa') + '</span>' + pills + yo +
+    '<span class="dcha">' +
+    (puedeFS() ? '<button class="fs" id="fs">' + (enFS() ? '&#10005;' : '&#9974;') + '</button>' : '') +
+    '<button class="fs aj' + (ajAbierto ? ' on' : '') + '" id="ajustes" aria-label="Ajustes">&#9881;</button></span>' +
+    (ajAbierto ? '<div class="ajmenu"><button id="cfgEntrar" class="sec">Configurar la mesa (losetas)</button>' +
+      '<div class="nota">Para quien monta la mesa: que losetas hay y donde esta cada una.</div></div>' : '') +
+    '</div>';
+}
+
+var ayudaAbierta = false;
+function ayudaHtml() {
+  if (instalada || enFS()) return '';
+  if (!ayudaAbierta)
+    return '<div class="ayuda"><button id="ayuda" class="mas">Como se pone a pantalla completa?</button></div>';
+  var pasos = esIOS
+    ? '<b>iPhone / iPad</b><ol>' +
+      '<li>Toca <b>Compartir</b> (el cuadrado con la flecha) y elige <b>Anadir a pantalla de inicio</b>.</li>' +
+      '<li>Abrelo desde el icono nuevo y gira el movil: ahi ya no hay barras.</li>' +
+      '<li><b>Si no ves el boton Compartir</b>, no estas en Safari. Abre <b>Safari</b> y entra en <b>' +
+        esc(location.host) + '</b> (o escanea el QR de la mesa con la camara).</li></ol>'
+    : '<b>Android</b><ol>' +
+      '<li>Toca la pantalla en cualquier sitio: se pone a pantalla completa y en horizontal.</li>' +
+      '<li>Si no pasa, no estas en Chrome. Abre <b>Chrome</b> y entra en <b>' +
+        esc(location.host) + '</b> (o escanea el QR de la mesa con la camara).</li>' +
+      '<li>Para salir de la pantalla completa, la <b>X</b> de arriba.</li></ol>';
+  return '<div class="ayuda abierta">' + pasos + '<button id="ayuda" class="mas">Cerrar</button></div>';
+}
+
+/* Pintar solo si cambia algo, y conservar el scroll (lo que se aprendio en
+   CerebroKorum: reconstruir el DOM a lo loco hace saltar la pagina). */
+var ultimoHtml = '';
+function pon(html) {
+  if (html === ultimoHtml) return;
+  var m = app.querySelector('.main');
+  var sy = m ? m.scrollTop : 0;
+  ultimoHtml = html;
+  // Si se esta escribiendo el nombre, que repintar no le quite el teclado
+  var fo = document.activeElement, foId = fo && fo.id === 'nombreH' ? fo.id : '', foPos = foId ? fo.selectionStart : 0;
+  // La rueda sigue donde iba aunque se repinte todo (la cuenta atras de A3 repinta cada segundo)
+  app.innerHTML = html.replace(/__GIRO__/g, '-' + ((Date.now() % 1100) / 1000).toFixed(2) + 's');
+  if (foId) { var nf = document.getElementById(foId); if (nf) { nf.focus(); try { nf.setSelectionRange(foPos, foPos); } catch (e) {} } }
+  var m2 = app.querySelector('.main');
+  if (m2 && sy) m2.scrollTop = sy;
+  ata();
+}
+
+function toast(txt, tipo) {
+  var t = document.getElementById('toast');
+  t.textContent = txt;
+  t.style.borderColor = COL[tipo] || COL[1];
+  t.className = 'toast';
+  clearTimeout(toast.h);
+  toast.h = setTimeout(function () { t.className = 'toast fuera'; }, 2600);
+}
+
+function zumba(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+/* ── Sin figura ─────────────────────────────────────────────────────────── */
+var FIGURA = '<svg viewBox="0 0 64 64" fill="none" stroke="#c9a227" stroke-width="3" stroke-linecap="round">' +
+  '<circle cx="32" cy="17" r="8"/><path d="M20 52 C20 36 24 29 32 29 C40 29 44 36 44 52"/>' +
+  '<path d="M14 56 H50"/></svg>';
+
+// Rueda de espera. 'peq' para dentro del cartel
+function rueda(peq) { return '<div class="rueda' + (peq ? ' peq' : '') + '" style="animation-delay:__GIRO__"></div>'; }
+var CRUZ = '<svg class="cruz" viewBox="0 0 80 80"><circle cx="40" cy="40" r="36"/>' +
+  '<path d="M27 27 L53 53"/><path d="M53 27 L27 53"/></svg>';
+
+function pintaSinFigura() {
+  var c, inicio = false;
+  if (st.bu) {
+    c = '<div class="espera">' + rueda() + FIGURA + '</div>' +
+      '<div class="estado">Escaneando</div>' +
+      '<h1>Pon tu figura en el mapa</h1>' +
+      '<div class="sub">En cualquier loseta. Si ya estaba encima, levantala y vuelve a ponerla.</div>' +
+      '<div class="sub" style="margin-top:10px">Quedan ' + st.bu + ' s</div>' +
+      '<button id="cancelar" class="ghost" style="max-width:240px">Cancelar</button>';
+  } else if (st.ot) {
+    c = '<div class="espera">' + rueda() + FIGURA + '</div>' +
+      '<div class="estado">Esperando</div>' +
+      '<h1>Un momento</h1>' +
+      '<div class="sub">Esperando a que el otro jugador termine de vincular su figura. Luego te toca.</div>';
+  } else if (st.msg) {
+    // Pasaron los 90 s sin figura (A5)
+    c = CRUZ + '<h1 class="mal">Figura no encontrada</h1>' +
+      '<div class="sub">' + esc(st.msg) + '</div>' +
+      '<button id="vincular" style="max-width:300px">Volver a intentarlo</button>';
+  } else {
+    c = '<div style="font-size:13px;letter-spacing:3px;color:#7d6b54">KORUM</div>' +
+      '<h1>Este movil es tu ficha</h1>' +
+      '<div class="sub">Aqui veras a tu heroe, lo que pasa en cada loseta y tus opciones.</div>' +
+      '<button id="vincular" style="max-width:300px">Vincular mi figura</button>';
+    c = '<div class="portada" style="background-image:url(' + ARTE + 'MenuFondo.webp)"></div>' + c;
+    inicio = true;
+  }
+  pon(topHtml() + '<div class="mid">' + c + '</div>' + (inicio ? ayudaHtml() : ''));
+}
+
+/* Ronda 4 (A3 -> A8): la figura ha llegado. El aro se pone verde y se cierra, la
+   figura se cambia por un check, el aro late una vez y a los 2 s pasa a lo
+   siguiente (C1 o C5). El HTML no cambia mientras dura: pon() no lo repinta y
+   las animaciones no vuelven a empezar aunque lleguen estados del cerebro. */
+var EXITO_MS = 2800, exitoHasta = 0;
+var CHECK = '<svg class="check" viewBox="0 0 64 64" fill="none" stroke="#6fbf73" stroke-width="6" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M17 33 L28 44 L48 22"/></svg>';
+function pintaExito() {
+  var h = st && st.h;
+  pon(topHtml() + '<div class="mid"><div class="espera ok">' +
+    '<svg class="aro" viewBox="0 0 132 132"><circle cx="66" cy="66" r="62.5"/></svg>' +
+    FIGURA.replace('<svg ', '<svg class="fig" ') + CHECK + '</div>' +
+    '<div class="estado ok">Detectada</div>' +
+    '<h1>Figura encontrada</h1>' +
+    '<div class="sub">' + (h ? esc(h.n) + ' vuelve a la mesa.' : 'Ahora vas a crear su héroe.') + '</div></div>');
+}
+
+/* ── Con figura ─────────────────────────────────────────────────────────── */
+function heroeHtml(h) {
+  if (!h) return '<div class="heroe"><div class="nombre">Figura sin heroe</div>' +
+    '<div class="oficio">Elige su raza y su clase en el cartel.</div></div>';
+  var pct = h.hm ? Math.max(0, Math.min(100, Math.round(100 * h.hp / h.hm))) : 0;
+  var xpPct = h.xn > h.xs ? Math.max(0, Math.min(100, Math.round(100 * (h.xp - h.xs) / (h.xn - h.xs)))) : 100;
+  return '<div class="heroe">' +
+    '<div class="fila1">' + arte(h.ar, 'avatar') + '<div><div class="nombre">' + esc(h.n) + '</div>' +
+    '<div class="oficio">' + esc(h.r) + ' &middot; ' + esc(h.c) + ' &middot; nivel ' + h.l + '</div></div>' +
+    '<div class="oro">' + h.o + ' oro</div></div>' +
+    '<div class="barras"><div>' +
+    '<div class="linea"><span>Vida</span><b>' + h.hp + ' / ' + h.hm + '</b></div>' +
+    '<div class="bar' + (pct <= 30 ? ' low' : '') + '"><i style="width:' + pct + '%"></i></div>' +
+    '</div><div>' +
+    '<div class="linea"><span>Experiencia</span><span>' + h.xp + ' / ' + h.xn + '</span></div>' +
+    '<div class="bar xp"><i style="width:' + xpPct + '%"></i></div>' +
+    '</div></div></div>';
+}
+
+function juegoTxt() {
+  var j = st.j;
+  if (!j || !j.f) return 'Sin partida.';
+  var t = 'Dia ' + j.d + ', ' + esc(j.f);
+  if (j.tu) t += '. ' + (j.mt ? '<b class="gold">Te toca a ti</b>' : 'Juega ' + esc(j.tu));
+  return t + '.';
+}
+
+var cartelVisto = -1;
+function pintaJuego() { return cartelHtml() + diarioHtml(false); }
+
+// "Lo ultimo". En horizontal es una pestana suya, y entonces dice algo aunque este vacio
+function diarioHtml(solo) {
+  if (!st.lg || !st.lg.length)
+    return solo ? '<div class="calma"><b>Nada todavia</b>Aqui saldra lo que le pase a tu heroe.</div>' : '';
+  return '<h2>Lo ultimo</h2><ul class="diario">' + st.lg.slice().reverse().map(function (l) {
+    return '<li style="border-left-color:' + (COL[l[1]] || COL[1]) + '">' + esc(l[2]) + '</li>';
+  }).join('') + '</ul>';
+}
+
+// Hay losetas marcadas a las que puedes ir (te toca moverte)
+function puedesMover() {
+  return (st.m || []).some(function (t) { return t[4] & 16; });
+}
+var MANO = '<svg viewBox="0 0 30 30" fill="none" stroke="#e8dcc8" stroke-width="2" stroke-linejoin="round">' +
+  '<path d="M15 3 L25 8.5 V19.5 L15 25 L5 19.5 V8.5 Z" stroke-dasharray="3 2.5"/>' +
+  '<circle cx="15" cy="11" r="3.2" fill="#c9a227" stroke="none"/><path d="M10.5 21 C10.5 16.5 12.5 14.8 15 14.8 C17.5 14.8 19.5 16.5 19.5 21" stroke="#c9a227"/></svg>';
+
+// El cartel de antes, cuando el nuevo lo pisa en menos de 3 s (D5 y D7 no se llegaban a leer)
+var pisado = null, cartelInfo = null;
+
+// Retrato redondo para un NPC, icono para un objeto, y banda arriba para el
+// lugar, el bicho o el mercado
+function cartelArteHtml(c) {
+  var a = c.ar;
+  if (!a || c.w) return '';
+  if (a.indexOf('npc/') === 0) return '<span style="color:' + (COL[c.k] || COL[1]) + '">' + arte(a, 'cara') + '</span>';
+  if (a.indexOf('Item') === 0) return arte(a, 'cosa');
+  return arte(a, 'banda' + (a.indexOf('Mon') === 0 ? ' bicho' : ''));
+}
+function cartelHtml() {
+  var c = st.ca, h = '';
+  if (pisado && Date.now() < pisado.hasta && (!c || c.s !== pisado.s))
+    h += '<div class="pisado" id="pisado" style="border-left-color:' + (COL[pisado.k] || COL[1]) + '"><b style="color:' +
+      (COL[pisado.k] || COL[1]) + '">' + esc(pisado.ti) + '</b>' + esc(pisado.tx) + '</div>';
+  if (c) {
+    var nuevo = c.s !== cartelVisto;
+    cartelVisto = c.s;
+    h += '<div class="cartel' + (nuevo ? ' nuevo' : '') + '" style="border-color:' + (COL[c.k] || COL[1]) + '">' +
+      (c.w ? rueda(true) + '<div class="estado" style="margin-bottom:4px">' + (c.w === 2 ? 'Escaneando' : 'Esperando a los demás') + '</div>' : '') +
+      cartelArteHtml(c) +
+      '<div class="tt" style="color:' + (COL[c.k] || COL[1]) + '">' + esc(c.ti) + '</div>' +
+      '<div class="tx">' + esc(c.tx) + '</div>' +
+      (c.op && c.op.length && puedesMover() ? '<div class="mover">' + MANO +
+        '<span>Para moverte, <b>levanta tu figura y ponla en una loseta marcada</b>. Si no, pulsa ' + esc(c.op[0]) + '.</span></div>' : '') +
+      '</div>';
+  } else {
+    // No deberia quedarse asi (al cerrar un cartel el cerebro manda lo que toca),
+    // pero si pasa, un boton para pedirlo
+    h += '<div class="calma">' + rueda(true) + '<b>Un momento</b>' + juegoTxt() +
+      '<button id="queToca" class="sec" style="max-width:260px">Ver qué toca</button></div>';
+  }
+  // En horizontal esta linea va arriba, en la barra (topHtml): aqui no cabe
+  if (c && !horizontal()) h += '<div class="sub" style="text-align:center;margin-top:10px">' + juegoTxt() + '</div>';
+  return h;
+}
+
+/* Si el heroe esta tambien en el chip de la figura (para llevarlo a otra mesa).
+   fg: 0 nada que guardar, 1 al dia, 2 pendiente, 3 loseta vieja, 4 trae otro
+   heroe, 5 el tag no vale, 6 fallo (reintenta). Como CHF_* en MovilWeb.h */
+function enFiguraHtml(fg) {
+  var t = [null,
+    ['ok', '<b>Guardado en la figura.</b> Puedes llevarla a otra mesa.'],
+    ['pend', '<b>Pendiente de guardar en la figura:</b> se hace solo con ella quieta unos segundos.'],
+    ['mal', '<b>No se guarda en la figura:</b> la loseta donde esta tiene el programa viejo.'],
+    ['mal', '<b>La figura trae otro heroe</b>, mas nuevo, y no se pisa. Para usarlo: suelta la figura y vuelve a vincularla.'],
+    ['mal', '<b>Esta figura no puede guardar el heroe:</b> su chip no es NTAG. Queda en la mesa.'],
+    ['mal', '<b>No se ha podido guardar en la figura.</b> Se vuelve a intentar sola.']][fg];
+  if (!t) return '';
+  var o = '<div class="enfig ' + t[0] + '"><span class="pto"></span><span>' + t[1] + '</span></div>';
+  if (fg === 2 || fg === 6) o += '<button id="chipya" class="ghost">Guardar en la figura ahora</button>';
+  return o;
+}
+
+function pintaHoja() {
+  var h = st.h, o = '';
+  if (h) {
+    if (h.p) o += '<div class="aviso">Tienes <b class="gold">' + h.p + '</b> punto' + (h.p > 1 ? 's' : '') +
+      ' para mejorar: Héroe &rarr; Mejorar.</div>';
+    o += '<h2>Atributos</h2><div class="skills">' + h.sk.map(function (v, i) {
+      return '<div class="sk"><span>' + esc(h.skn[i]) + '</span><b>' + v + '</b></div>';
+    }).join('') + '</div>';
+    o += '<h2>Mochila</h2><div class="chips">' + (h.inv.length ? h.inv.map(function (n, i) {
+      return '<span class="chip">' + arte((h.ia || [])[i], '') + esc(n) + '</span>';
+    }).join('') : '<span class="chip vacio">vacia</span>') + '</div>';
+    o += enFiguraHtml(h.fg);
+  }
+  var otros = (st.me || []).filter(function (m) { return !m.yo; });
+  o += '<h2>En la mesa</h2>' + (otros.length ? otros.map(function (m) {
+    return '<div class="compa' + (m.on ? '' : ' off') + '"><span class="color" style="background:' + m.c + '"></span>' +
+      '<span>' + esc(m.n) + (m.tu ? ' <span class="tu">juega</span>' : '') + '</span>' +
+      '<span class="e">' + esc(m.e) + (m.on ? '' : ' &middot; sin movil') + '</span></div>';
+  }).join('') : '<div class="sub">Nadie mas todavia.</div>');
+  o += '<button id="soltar" class="ghost" style="margin-top:26px">Soltar la figura de este movil</button>';
+  return o;
+}
+
+/* El mapa: hexagonos de lado plano arriba, en columnas, como estan las losetas
+   en la mesa. Coordenadas axiales (q, r) del cerebro. */
+function pintaMapa() {
+  var m = st.m || [];
+  if (!m.length) return '<div class="calma"><b>Sin mapa</b>Las losetas aun no tienen posicion en el dibujo. Quien monta la mesa las coloca en ' +
+    '<b style="display:inline;color:#c9a227">&#9881;</b> &gt; Configurar la mesa.</div>';
+  var R = 30, S3 = Math.sqrt(3), minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  var hex = m.map(function (t) {
+    var x = R * 1.5 * t[0], y = R * S3 * (t[1] + t[0] / 2);
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    return { x: x, y: y, t: t };
+  });
+  var pad = R + 6, w = maxX - minX + 2 * pad, hgt = maxY - minY + 2 * pad;
+  var s = '<svg viewBox="' + (minX - pad) + ' ' + (minY - pad) + ' ' + w + ' ' + hgt + '">';
+  hex.forEach(function (o) {
+    var f = o.t[4], pts = [];
+    for (var k = 0; k < 6; k++) {
+      var a = Math.PI / 3 * k;
+      pts.push((o.x + (R - 2) * Math.cos(a)).toFixed(1) + ',' + (o.y + (R - 2) * Math.sin(a)).toFixed(1));
+    }
+    var borde = (f & 4) ? '#d0624f' : (f & 16) ? '#e8dcc8' : '#2c241c';
+    s += '<polygon' + ((f & 16) ? ' class="va"' : '') + ' points="' + pts.join(' ') + '" fill="' + (o.t[2] || '#2b2520') + '" stroke="' + borde +
+      '" stroke-width="' + ((f & 20) ? 3 : 1.5) + '"' + ((f & 32) ? '' : ' opacity=".45"') + '/>';
+    if (o.t[3]) s += '<text x="' + o.x + '" y="' + (o.y + R * .55) + '" font-size="9" text-anchor="middle" fill="#e8dcc8" opacity=".85">' +
+      esc(o.t[3]) + '</text>';
+    if (f & 8) s += '<text x="' + o.x + '" y="' + (o.y - R * .38) + '" font-size="12" text-anchor="middle" fill="#c9a227">&#9733;</text>';
+    if (o.t[5]) {      // los demas heroes que hay aqui: puntos de su color
+      o.t[5].forEach(function (c, i) {
+        s += '<circle cx="' + (o.x - 9 + i * 9) + '" cy="' + (o.y + 3) + '" r="4" fill="' + c + '" stroke="#1a1410"/>';
+      });
+    }
+    if (f & 1) s += '<circle cx="' + o.x + '" cy="' + (o.y - 2) + '" r="9" fill="' + (st.h ? st.h.col : '#c9a227') +
+      '" stroke="#fff" stroke-width="2"/>';
+  });
+  s += '</svg>';
+  return '<div class="mapa">' + s + '</div><div class="leyenda">' +
+    '<span><span class="color" style="background:' + (st.h ? st.h.col : '#c9a227') + '"></span>tu</span>' +
+    '<span style="color:#c9a227">&#9733; salida</span>' +
+    '<span><span class="color" style="background:0;border:2px solid #e8dcc8"></span>puedes ir</span>' +
+    '<span><span class="color" style="background:0;border:2px solid #d0624f"></span>combate</span>' +
+    '<span style="opacity:.6">gris = sin explorar</span></div>';
+}
+
+// En horizontal el cartel ya esta siempre a la derecha: la pestana "Juego" no hace
+// falta y su sitio lo ocupa el mapa; el diario pasa a tener pestana propia
+function tabActual() {
+  if (horizontal()) return tab === 'hoja' || tab === 'diario' ? tab : 'mapa';
+  return tab === 'diario' ? 'juego' : tab;
+}
+
+function tabsHtml() {
+  var t = horizontal() ? [['mapa', 'Mapa'], ['hoja', 'Hoja'], ['diario', 'Lo ultimo']]
+                       : [['juego', 'Juego'], ['hoja', 'Hoja'], ['mapa', 'Mapa']];
+  var actual = tabActual();
+  return '<div class="tabs">' + t.map(function (x) {
+    var badge = x[0] === 'juego' && actual !== 'juego' && st.ca && st.ca.op && st.ca.op.length;
+    return '<button data-tab="' + x[0] + '" class="' + (actual === x[0] ? 'on' : '') + '">' + x[1] +
+      (badge ? '<span class="badge"></span>' : '') + '</button>';
+  }).join('') + '</div>';
+}
+
+/* La franja de abajo: las opciones del cartel (todas: el cerebro ya no las parte
+   en paginas para el movil), "Vale" si solo informa, nada si es una espera. Y
+   debajo los dos menus: Heroe (lo tuyo) y Mesa (lo de todos). mn = 0 si el
+   cartel no se puede dejar a medias (crear heroe, una prueba, el combate). */
+function menusHtml() {
+  return '<button id="menu"><b>&#9733;</b>Héroe</button><button id="mesa"><b>&#11041;</b>Mesa</button>';
+}
+// El nombre del heroe nuevo: el chip solo guarda A-Z y espacio, hasta 12
+var nombreH = '';
+function limpiaNombre(t) {
+  t = String(t || '');
+  if (t.normalize) t = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return t.toUpperCase().replace(/[^A-Z ]/g, '').replace(/ +/g, ' ').replace(/^ /, '').slice(0, 12);
+}
+function accionesHtml() {
+  var c = st.ca, o = '', n = c && c.op ? c.op.length : 0;
+  var tres = n === 3 && !!c.pr;                           // las tres razas, en una fila
+  if (n) {
+    if (c.in) o += '<div class="nombre"><label for="nombreH">Nombre del heroe</label>' +
+      '<input id="nombreH" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
+      'placeholder="Escribelo, o se pone uno al azar" value="' + esc(nombreH) + '"></div>';
+    if (c.pr) o += '<div class="pregunta">' + esc(c.pr) + '</div>';
+    o += c.op.map(function (x, i) {
+      var sola = !tres && n % 2 === 1 && i === n - 1 && n > 1;    // la ultima de un numero impar, a lo ancho
+      // Razas y clases con su lamina encima; objetos con su icono al lado
+      var a = (c.oa || [])[i], grande = a && !/^Item/.test(a);
+      // Ronda 5: con varias, todas iguales (la primera en dorado parecia ya elegida);
+      // una sola (Seguir, Vale...) no es elegir y se queda en dorado
+      return '<button data-op="' + i + '" class="' + (n > 1 ? 'sec' : '') + (grande ? ' conIco' : '') + '"' +
+        (sola ? ' style="grid-column:1/-1"' : '') + '>' + (a ? arte(a, grande ? 'ico' : 'mini') : '') + esc(x) + '</button>';
+    }).join('');
+  } else if (c && !c.w) {
+    o = '<button id="vale">Vale</button>';
+  }
+  var barra = st.mn !== 0 && !horizontal() ? '<div class="barra">' + menusHtml() + '</div>' : '';
+  if (!o && !barra) return '';
+  return '<div class="acciones' + (tres ? ' tres' : n > 1 ? ' dos' : '') + (n > 4 ? ' muchas' : '') + '">' + o +
+    (barra ? '<div style="grid-column:1/-1">' + barra + '</div>' : '') + '</div>';
+}
+
+/* Ronda 4 (C1): crear el heroe va en una pantalla suya, sin mapa ni hoja, en
+   vertical y en horizontal. Paso 1: el nombre, obligatorio (aqui, en la pagina;
+   se manda al cerebro con "nombre" y el lo guarda hasta crearFin). Paso 2: la
+   raza. Paso 3: la clase. Las laminas enteras y ninguna preseleccionada. */
+var nombreListo = false, nombreHeroe = '';
+function creando() { return !!(st.v && !st.h && st.ca && (st.ca['in'] || st.ca.pr)); }
+function pintaCreacion() {
+  var c = st.ca, o;
+  if (c['in'] && !nombreListo) {
+    var ok = limpiaNombre(nombreH).trim().length >= 2;
+    o = '<div class="paso">Nuevo héroe &middot; paso 1 de 3</div>' +
+      '<h1>¿Cómo se llama tu héroe?</h1>' +
+      '<input id="nombreH" class="nombreIn" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" ' +
+      'enterkeyhint="next" placeholder="Escribe su nombre" value="' + esc(nombreH) + '">' +
+      '<div class="sub">Hasta 12 letras, sin tildes ni eñe: es lo que cabe en el chip de la figura.</div>' +
+      '<button id="nombreOk"' + (ok ? '' : ' disabled') + '>Seguir</button>';
+  } else {
+    var n = c.op.length, quien = esc(nombreHeroe || limpiaNombre(nombreH).trim());
+    o = '<div class="paso">Nuevo héroe &middot; paso ' + (c['in'] ? 2 : 3) + ' de 3</div>' +
+      '<h1>' + esc(c.pr || c.ti) + '</h1>' +
+      '<div class="sub">' + (quien ? '<b class="gold">' + quien + '</b>' : '') +
+      (c['in'] ? ' &middot; <button id="nombreOtra" class="mas">cambiar el nombre</button>' :
+                 (quien ? ' &middot; ' : '') + esc(c.tx)) + '</div>' +
+      '<div class="cartas' + (n > 3 ? ' cuatro' : '') + '">' + c.op.map(function (x, i) {
+        var a = (c.oa || [])[i];
+        return '<button data-op="' + i + '">' + (a ? arte(a, 'lamina') : '') + '<span>' + esc(x) + '</span></button>';
+      }).join('') + '</div>';
+  }
+  pon(topHtml() + '<div class="crear' + (horizontal() ? ' h' : '') + '">' + o + '</div>');
+}
+
+function pintaConFigura() {
+  if (creando()) { pintaCreacion(); return; }
+  var t = tabActual();
+  if (horizontal()) {
+    var izq = t === 'hoja' ? pintaHoja() : t === 'diario' ? diarioHtml(true) : pintaMapa();
+    pon(topHtml() + '<div class="horiz">' +
+      '<div class="izq">' + tabsHtml() + '<div class="main">' + izq + '</div></div>' +
+      '<div class="der"><div class="main">' + heroeHtml(st.h) + cartelHtml() + '</div>' + accionesHtml() + '</div>' +
+      '</div>');
+    return;
+  }
+  var cuerpo = t === 'hoja' ? pintaHoja() : t === 'mapa' ? pintaMapa() : pintaJuego();
+  pon(topHtml() + tabsHtml() + '<div class="main">' + heroeHtml(st.h) + cuerpo + '</div>' + accionesHtml());
+}
+
+/* ── Configurar la mesa: que losetas hay, donde esta cada una y las placas y
+   cartas con chip. Es lo que antes se hacia por el USB (buscar, pos N q r,
+   registrar...). Se elige una loseta tocandola en la lista (se enciende en
+   blanco en la mesa) o poniendo una figura encima, y se toca su hueco en el
+   dibujo. Las posiciones se guardan en la flash del cerebro al momento. ── */
+var cfgSel = 0, cfgUs = -1, cfgTipo = 2, cfgObj = 2;
+var DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]];
+function cfgLoseta(d) {
+  var ls = st.cfg.ls;
+  for (var i = 0; i < ls.length; i++) if (ls[i][0] === d) return ls[i];
+  return null;
+}
+
+function cfgDibujo(c) {
+  var R = 30, S3 = Math.sqrt(3);
+  var puestas = c.ls.filter(function (l) { return l[2]; });
+  var ocup = {}, huecos = [], visto = {};
+  puestas.forEach(function (l) { ocup[l[3] + ',' + l[4]] = 1; });
+  if (!puestas.length) huecos.push([0, 0]);
+  puestas.forEach(function (l) {
+    DIRS.forEach(function (dd) {
+      var q = l[3] + dd[0], r = l[4] + dd[1], k = q + ',' + r;
+      if (!ocup[k] && !visto[k]) { visto[k] = 1; huecos.push([q, r]); }
+    });
+  });
+  var celdas = puestas.map(function (l) { return { q: l[3], r: l[4], l: l }; })
+    .concat(huecos.map(function (h) { return { q: h[0], r: h[1], l: null }; }));
+  var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  celdas.forEach(function (o) {
+    o.x = R * 1.5 * o.q; o.y = R * S3 * (o.r + o.q / 2);
+    minX = Math.min(minX, o.x); maxX = Math.max(maxX, o.x); minY = Math.min(minY, o.y); maxY = Math.max(maxY, o.y);
+  });
+  var pad = R + 4, sel = cfgSel ? cfgLoseta(cfgSel) : null;
+  var s = '<svg viewBox="' + (minX - pad) + ' ' + (minY - pad) + ' ' + (maxX - minX + 2 * pad) + ' ' + (maxY - minY + 2 * pad) + '">';
+  function hexPts(o, rr) {
+    var p = [];
+    for (var k = 0; k < 6; k++) { var a = Math.PI / 3 * k; p.push((o.x + rr * Math.cos(a)).toFixed(1) + ',' + (o.y + rr * Math.sin(a)).toFixed(1)); }
+    return p.join(' ');
+  }
+  celdas.forEach(function (o) {
+    if (o.l) return;
+    var activo = !!sel;
+    s += '<g class="hueco" data-q="' + o.q + '" data-r="' + o.r + '"' + (activo ? '' : ' opacity=".35"') + '>' +
+      '<polygon points="' + hexPts(o, R - 3) + '" fill="' + (activo ? '#211a15' : 'none') + '" stroke="#c9a227" stroke-width="1.3" stroke-dasharray="4 3"/>' +
+      '<text x="' + o.x + '" y="' + (o.y + 7) + '" font-size="20" text-anchor="middle" fill="#c9a227">+</text></g>';
+  });
+  celdas.forEach(function (o) {
+    if (!o.l) return;
+    var l = o.l, esSel = l[0] === cfgSel;
+    s += '<g class="lt" data-d="' + l[0] + '">' +
+      '<polygon points="' + hexPts(o, R - 2) + '" fill="' + (l[1] ? '#3a2f24' : '#241d17') + '" stroke="' +
+      (esSel ? '#c9a227' : l[1] ? '#6d5e4b' : '#d0624f') + '" stroke-width="' + (esSel ? 3.5 : 1.5) + '"' +
+      (l[1] ? '' : ' stroke-dasharray="3 3"') + '/>' +
+      '<text x="' + o.x + '" y="' + (o.y + 7) + '" font-size="19" font-weight="700" text-anchor="middle" fill="' +
+      (esSel ? '#c9a227' : '#e8dcc8') + '">' + l[0] + '</text>';
+    if (l[5]) s += '<circle cx="' + (o.x + 13) + '" cy="' + (o.y - 13) + '" r="4" fill="#6fbf73"/>';
+    if (l[6]) s += '<text x="' + o.x + '" y="' + (o.y + R * .62) + '" font-size="8" text-anchor="middle" fill="#9a8a72">' + esc(l[6]) + '</text>';
+    s += '</g>';
+  });
+  return '<div class="mapa cfg">' + s + '</svg></div><div class="leyenda">' +
+    '<span><b style="color:#e8dcc8">7</b>&nbsp;loseta colocada</span>' +
+    '<span style="color:#c9a227">+ hueco libre</span>' +
+    '<span><span class="color" style="background:#6fbf73"></span>algo encima</span>' +
+    '<span style="color:#d0624f">rojo = no contesta</span></div>';
+}
+
+function cfgPanel(c) {
+  var o = '';
+  if (c.rc) {             // registrando placas o cartas: lo primero que se ve
+    var cual = c.rc === 1 ? 'placas de ' + ((c.tp || [])[c.rv - 1] || '?') : 'cartas de ' + ((c.ob || [])[c.rv] || '?');
+    var van = c.rc === 1 ? (c.np[c.rv - 1] || 0) : (c.nc[c.rv] || 0);
+    o += '<div class="sel" style="margin-top:0"><div class="n" style="font-size:16px">Registrando ' + esc(cual) + '</div>' +
+      '<div class="pista">Pon cada una encima de cualquier loseta, de una en una. Llevas <b class="gold">' + van + '</b>.</div>' +
+      '<button id="cfgRegNada">Parar</button></div>';
+  }
+  if (!c.bus) o += '<div class="aviso malo">El mapa no contesta: la linea de datos esta a 0. Falta la resistencia de pull-up o hay un corto.</div>';
+  if (c.fj) o += '<div class="aviso">Hay una partida en marcha. Si cambias el mapa ahora, la partida puede liarse.</div>';
+  if (c.msg) o += '<div class="aviso">' + esc(c.msg) + '</div>';
+  if (!c.ls.length) {
+    o += '<h2>Losetas</h2><ol class="pasos">' +
+      '<li><span>Monta las losetas en la mesa, conectadas entre si y al cerebro.</span></li>' +
+      '<li><span>Pulsa <b>Buscar losetas</b>. El cerebro les da un numero y las guarda.</span></li></ol>';
+  } else {
+    var sin = c.ls.filter(function (l) { return !l[2]; });
+    var sel = cfgSel ? cfgLoseta(cfgSel) : null;
+    if (sel) {
+      var est = [sel[1] ? 'contesta' : 'NO contesta', sel[2] ? 'colocada' : 'sin colocar'];
+      if (sel[5]) est.push(sel[5] + ' cosa' + (sel[5] > 1 ? 's' : '') + ' encima');
+      if (sel[6]) est.push('placa de ' + sel[6]);
+      o += '<div class="sel"><div class="n">Loseta ' + sel[0] + '</div><div class="e">' + est.join(' &middot; ') + '</div>' +
+        '<div class="pista">' + (sel[2] ? 'Para moverla, toca otro hueco <b class="gold">+</b> del dibujo.'
+                                        : 'Ahora toca en el dibujo el hueco <b class="gold">+</b> donde esta en la mesa.') + '</div>' +
+        '<div class="fila">' + (sel[1] ? '<button id="cfgVer" class="sec">Encenderla</button>' : '') +
+        (sel[2] ? '<button id="cfgSinPos" class="ghost">Quitar del dibujo</button>' : '') +
+        '<button id="cfgDesel" class="ghost">Ninguna</button></div></div>';
+    } else {
+      o += '<ol class="pasos" style="margin-top:12px">' +
+        '<li><span>Elige una loseta: <b>tocala</b> en el dibujo o en la lista (se enciende en blanco en la mesa), o <b>pon una figura encima</b>.</span></li>' +
+        '<li><span>Toca en el dibujo el <b>hueco +</b> donde esta. Se guarda sola.</span></li></ol>';
+    }
+    o += '<h2>Sin colocar (' + sin.length + ')</h2>' + (sin.length ? '<div class="lista">' + sin.map(function (l) {
+      return '<button data-cd="' + l[0] + '" class="' + (l[0] === cfgSel ? 'on' : '') + (l[1] ? '' : ' muda') + '">' + l[0] + '</button>';
+    }).join('') + '</div>' : '<div class="sub">Todas las losetas estan en el dibujo.</div>');
+  }
+  o += '<button id="cfgBuscar"' + (c.ls.length ? ' class="sec"' : '') + '>Buscar losetas</button>';
+
+  // Placas de terreno y cartas de objeto (los tags que no son figuras)
+  var tp = c.tp || [], ob = c.ob || [];
+  var np = (c.np || []).reduce(function (a, b) { return a + b; }, 0), nc = (c.nc || []).reduce(function (a, b) { return a + b; }, 0);
+  o += '<h2>Placas y cartas</h2>';
+  if (c.rc) {
+    // Mientras se registra, el cartel va arriba del todo (ver mas abajo)
+    o += '<div class="sub">Registrando: el cartel de arriba.</div>';
+  } else {
+    o += '<div class="sub">Registradas: ' + np + ' placa' + (np === 1 ? '' : 's') + ' y ' + nc + ' carta' + (nc === 1 ? '' : 's') + '.</div>' +
+      '<select id="cfgTipo">' + tp.map(function (n, i) {
+        return '<option value="' + (i + 1) + '"' + (i + 1 === cfgTipo ? ' selected' : '') + '>Placa: ' + esc(n) +
+          (c.np[i] ? ' (' + c.np[i] + ')' : '') + '</option>';
+      }).join('') + '</select><button id="cfgRegPlaca" class="sec" style="margin-top:8px">Registrar placas de este tipo</button>' +
+      '<select id="cfgObj">' + ob.map(function (n, i) {
+        return '<option value="' + i + '"' + (i === cfgObj ? ' selected' : '') + '>Carta: ' + esc(n) +
+          (c.nc[i] ? ' (' + c.nc[i] + ')' : '') + '</option>';
+      }).join('') + '</select><button id="cfgRegCarta" class="sec" style="margin-top:8px">Registrar cartas de este objeto</button>';
+  }
+  // B2 (ronda 3): mapa nuevo = borrar solo el dibujo; las losetas siguen con su numero
+  if (c.ls.some(function (l) { return l[2]; }))
+    o += '<h2>Mapa nuevo</h2><div class="sub">Si hoy las losetas estan en otro orden: borra el dibujo y vuelve a ' +
+      'colocarlas. Siguen siendo las mismas, no hay que buscarlas otra vez.</div>' +
+      '<button id="cfgMapaNuevo" class="sec" style="margin-top:8px">Borrar el dibujo y colocarlas de nuevo</button>';
+  o += '<h2>Cuidado</h2><div class="fila">' +
+    '<button id="cfgBorrarTags" class="ghost peligro">Olvidar placas y cartas</button>' +
+    '<button id="cfgOlvidar" class="ghost peligro">Olvidar las losetas</button></div>';
+  return o;
+}
+
+function pintaCfg() {
+  var c = st.cfg;
+  var top = '<div class="top' + (vivo ? '' : ' caido') + '"><span class="dot ' + (vivo ? '' : 'off') + '"></span>' +
+    '<span>' + (vivo ? '<b style="color:#e8dcc8">Configurar la mesa</b>' : 'sin conexion, volviendo...') + '</span>' +
+    '<button class="fs" id="cfgSalir" style="margin-left:auto;font-size:14px">Salir &#10005;</button></div>';
+  var dib = c.ls.length ? cfgDibujo(c) : '<div class="calma"><b>Todavia no hay losetas</b>Pulsa Buscar losetas.</div>';
+  if (horizontal()) {
+    pon(top + '<div class="horiz"><div class="izq"><div class="main">' + dib + '</div></div>' +
+      '<div class="der"><div class="main">' + cfgPanel(c) + '</div></div></div>');
+  } else {
+    pon(top + '<div class="main">' + dib + cfgPanel(c) + '</div>');
+  }
+}
+
+function ataCfg() {
+  function por(id, fn) { var e = document.getElementById(id); if (e) e.onclick = fn; }
+  function elige(d) {
+    cfgSel = d;
+    var l = cfgLoseta(d);
+    if (l && l[1]) manda({ t: 'ver', d: d });
+    pinta();
+  }
+  por('cfgSalir', function () { cfgSel = 0; manda({ t: 'cfg', s: 0 }); });
+  por('cfgBuscar', function () { this.disabled = true; this.textContent = 'Buscando...'; manda({ t: 'buscar' }); });
+  por('cfgVer', function () { manda({ t: 'ver', d: cfgSel }); });
+  por('cfgSinPos', function () { manda({ t: 'sinpos', d: cfgSel }); });
+  por('cfgDesel', function () { cfgSel = 0; pinta(); });
+  por('cfgRegPlaca', function () { manda({ t: 'registrar', s: 1, q: cfgTipo }); });
+  por('cfgRegCarta', function () { manda({ t: 'registrar', s: 2, q: cfgObj }); });
+  por('cfgRegNada', function () { manda({ t: 'registrar', s: 0, q: 0 }); });
+  por('cfgMapaNuevo', function () {
+    if (confirm('Se borra donde esta cada loseta en el dibujo. Luego, pon una figura en cada una y toca su hueco.')) {
+      cfgSel = 0; manda({ t: 'sinpos', d: 0 });
+    }
+  });
+  por('cfgBorrarTags', function () {
+    if (confirm('El cerebro olvidara todas las placas y cartas registradas. Habra que registrarlas otra vez.')) manda({ t: 'borrartags' });
+  });
+  por('cfgOlvidar', function () {
+    if (confirm('El cerebro olvidara todas las losetas y donde esta cada una. Habra que buscarlas y colocarlas otra vez.')) {
+      cfgSel = 0; manda({ t: 'olvidar' });
+    }
+  });
+  var ti = document.getElementById('cfgTipo');
+  if (ti) ti.onchange = function () { cfgTipo = +ti.value; };
+  var oj = document.getElementById('cfgObj');
+  if (oj) oj.onchange = function () { cfgObj = +oj.value; };
+  [].forEach.call(document.querySelectorAll('[data-cd]'), function (b) {
+    b.onclick = function () { elige(+b.getAttribute('data-cd')); };
+  });
+  [].forEach.call(document.querySelectorAll('.cfg [data-d]'), function (g) {
+    g.onclick = function () { elige(+g.getAttribute('data-d')); };
+  });
+  [].forEach.call(document.querySelectorAll('.cfg .hueco'), function (g) {
+    g.onclick = function () {
+      if (!cfgSel) { toast('Elige antes una loseta', 1); return; }
+      manda({ t: 'pos', d: cfgSel, q: +g.getAttribute('data-q'), r: +g.getAttribute('data-r') });
+    };
+  });
+}
+
+function pinta() {
+  if (!st) {
+    // Ronda 4 (A1): con el fondo de la portada, como A2
+    pon(topHtml() + '<div class="mid"><div class="portada" style="background-image:url(' + ARTE + 'MenuFondo.webp)"></div>' +
+      rueda() + '<div class="estado">Conectando</div>' +
+      '<div class="sub">Buscando el cerebro de la mesa...</div></div>');
+    return;
+  }
+  if (st.lleno) { pon(topHtml() + '<div class="mid"><h1>Mesa llena</h1><div class="sub">Ya hay seis moviles jugando.</div></div>'); return; }
+  if (st.cfg) { pintaCfg(); return; }
+  if (exitoHasta && Date.now() < exitoHasta) { pintaExito(); return; }
+  if (!st.v) { pintaSinFigura(); return; }
+  pintaConFigura();
+}
+
+function ata() {
+  if (st && st.cfg) { ataCfg(); return; }
+  var ce = document.getElementById('cfgEntrar');
+  if (ce) ce.onclick = function () { ajAbierto = false; cfgUs = -1; manda({ t: 'cfg', s: 1 }); };
+  var b = document.getElementById('fs');
+  if (b) b.onclick = toggleFS;
+  var aj = document.getElementById('ajustes');
+  if (aj) aj.onclick = function (e) { e.stopPropagation(); ajAbierto = !ajAbierto; pinta(); };
+  var nh = document.getElementById('nombreH');
+  if (nh) nh.oninput = function () {
+    var l = limpiaNombre(nh.value);
+    if (l !== nh.value.toUpperCase()) nh.value = l;
+    nombreH = l;
+    var bo = document.getElementById('nombreOk');
+    if (bo) bo.disabled = l.trim().length < 2;
+  };
+  var nok = document.getElementById('nombreOk');
+  if (nok) nok.onclick = function () {
+    var n = limpiaNombre(nombreH).trim();
+    if (n.length < 2) return;
+    nombreListo = true; nombreHeroe = n;
+    manda({ t: 'nombre', n: n });
+    pinta();
+  };
+  if (nh && nok) nh.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); nok.click(); } };
+  var nco = document.getElementById('nombreOtra');
+  if (nco) nco.onclick = function () { nombreListo = false; nombreH = nombreHeroe; pinta(); };
+  var ay = document.getElementById('ayuda');
+  if (ay) ay.onclick = function () { ayudaAbierta = !ayudaAbierta; pinta(); };
+  var v = document.getElementById('vincular');
+  if (v) v.onclick = function () { v.disabled = true; manda({ t: 'vincular' }); };
+  var ca = document.getElementById('cancelar');
+  if (ca) ca.onclick = function () { manda({ t: 'cancelar' }); };
+  var so = document.getElementById('soltar');
+  if (so) so.onclick = function () {
+    if (confirm('Este movil dejara de ser la ficha de ' + (st.h ? st.h.n : 'esta figura') +
+                '. El heroe queda guardado en la mesa (y en la figura, si esta en una loseta): vuelve a vincularla cuando quieras.'))
+      manda({ t: 'soltar' });
+  };
+  var cy = document.getElementById('chipya');
+  if (cy) cy.onclick = function () { cy.disabled = true; manda({ t: 'chip' }); };
+  var me = document.getElementById('menu');
+  if (me) me.onclick = function () { me.disabled = true; cartelInfo = null; manda({ t: 'menu', q: st.ca ? st.ca.s : 0 }); };
+  var ms = document.getElementById('mesa');
+  if (ms) ms.onclick = function () { ms.disabled = true; cartelInfo = null; manda({ t: 'mesa', q: st.ca ? st.ca.s : 0 }); };
+  var qt = document.getElementById('queToca');
+  if (qt) qt.onclick = function () { qt.disabled = true; manda({ t: 'cerrar', q: 0 }); };
+  var pi = document.getElementById('pisado');
+  if (pi) pi.onclick = function () { pisado = null; pinta(); };
+  var va = document.getElementById('vale');
+  if (va) va.onclick = function () { va.disabled = true; cartelInfo = null; manda({ t: 'cerrar', q: st.ca.s }); };
+  [].forEach.call(document.querySelectorAll('button[data-op]'), function (x) {
+    x.onclick = function () {
+      [].forEach.call(document.querySelectorAll('button[data-op]'), function (y) { y.disabled = true; });
+      if (st.ca.in) { manda({ t: 'nombre', n: limpiaNombre(nombreH).trim() }); nombreH = ''; }
+      manda({ t: 'op', q: st.ca.s, s: +x.getAttribute('data-op') });
+    };
+  });
+  [].forEach.call(document.querySelectorAll('button[data-tab]'), function (t) {
+    t.onclick = function () {
+      tab = t.getAttribute('data-tab');
+      try { localStorage.setItem('korum_movil_tab', tab); } catch (e) {}
+      pinta();
+    };
+  });
+}
+
+/* ── El socket, con el latido de CerebroKorum (el WebSocket de un movil que se
+   ha dormido se queda "abierto" y mudo: sin latido no hay forma de saberlo) ── */
+function manda(o) {
+  if (!ws || ws.readyState !== 1) return;
+  o.tk = tk;
+  ws.send(JSON.stringify(o));
+}
+var ultimoRaw = '', ultimoLatido = 0, reconectando = false;
+var LATIDO_MS = 3000, MUERTO_MS = 11000;
+
+function reconectaPronto(ms) {
+  if (reconectando) return;
+  reconectando = true;
+  setTimeout(conecta, ms);
+}
+
+function recibe(raw) {
+  if (raw === ultimoRaw) return;
+  ultimoRaw = raw;
+  var antes = st, nuevo;
+  // Si el cerebro se quedara corto de bufer, el JSON llegaria cortado: mejor
+  // seguir con lo que habia que dejar la pagina en blanco
+  try { nuevo = JSON.parse(raw); } catch (e) { return; }
+  st = nuevo;
+  // Configurar: una loseta a la que le acaban de poner algo encima (o la primera
+  // nueva de una busqueda) queda elegida
+  if (st.cfg) {
+    if (cfgUs >= 0 && st.cfg.us !== cfgUs && st.cfg.ul) { cfgSel = st.cfg.ul; zumba(40); }
+    cfgUs = st.cfg.us;
+    if (cfgSel && !cfgLoseta(cfgSel)) cfgSel = 0;
+  }
+  if (st.h || !st.v) nombreListo = false;      // creado (o soltado): la proxima vez, otra vez el paso 1
+  if (st.tk && st.tk !== tk) {
+    tk = st.tk;
+    try { localStorage.setItem('korum_movil_tk', tk); } catch (e) {}
+  }
+  // Aviso de lo que ha pasado (dano, oro, objeto...), solo de lo nuevo
+  if (st.lg && st.lg.length) {
+    var ult = st.lg[st.lg.length - 1];
+    if (vistoLog >= 0 && ult[0] !== vistoLog) toast(ult[2], ult[1]);
+    vistoLog = ult[0];
+  }
+  // Un cartel que solo informa y lo pisa otro en menos de 3 s: se queda encima
+  // un rato, para que se pueda leer (NUEVA PARTIDA y EN LA MESA)
+  var ahora = Date.now();
+  if (st.ca && (!cartelInfo || cartelInfo.s !== st.ca.s)) {
+    if (cartelInfo && ahora - cartelInfo.t < 3000)
+      pisado = { s: cartelInfo.s, ti: cartelInfo.ti, tx: cartelInfo.tx, k: cartelInfo.k, hasta: ahora + 8000 };
+    cartelInfo = st.ca.op && st.ca.op.length ? null :
+      { s: st.ca.s, ti: st.ca.ti, tx: st.ca.tx, k: st.ca.k, t: ahora };
+    if (pisado) setTimeout(function () { if (pisado && Date.now() >= pisado.hasta) { pisado = null; pinta(); } }, 8100);
+  }
+  // Un cartel nuevo que pide decidir: al frente y con un zumbido
+  if (st.ca && st.ca.op && st.ca.op.length && (!antes || !antes.ca || antes.ca.s !== st.ca.s)) {
+    if (!horizontal() && tab !== 'juego') { tab = 'juego'; }   // en horizontal ya se ve
+    zumba(st.j && st.j.mt ? [60, 60, 60] : 50);
+  }
+  // Ronda 4 (A3): estaba escaneando y la figura ha llegado
+  if (antes && antes.bu && !antes.v && st.v && !st.cfg) {
+    exitoHasta = Date.now() + EXITO_MS;
+    setTimeout(pinta, EXITO_MS + 50);
+    zumba([30, 70, 30, 70, 90]);
+  }
+  pinta();
+}
+
+function conecta() {
+  reconectando = false;
+  try { if (ws) { ws.onclose = null; ws.onerror = null; ws.onmessage = null; ws.close(); } } catch (e) {}
+  ws = new WebSocket('ws://' + location.host + '/ws');
+  ultimoLatido = Date.now();
+  ws.onopen = function () {
+    vivo = true;
+    ultimoRaw = '';
+    ultimoLatido = Date.now();
+    manda({ t: 'hello' });
+    pinta();
+  };
+  ws.onmessage = function (e) {
+    ultimoLatido = Date.now();               // lo primero: cualquier cosa demuestra que vive
+    if (!vivo) { vivo = true; pinta(); }
+    if (e.data.indexOf('"pong"') >= 0) return;
+    recibe(e.data);
+  };
+  ws.onclose = function () { vivo = false; pinta(); reconectaPronto(700); };
+  ws.onerror = function () { try { ws.close(); } catch (e) {} };
+}
+
+setInterval(function () {
+  if (!ws) { reconectaPronto(0); return; }
+  if (ws.readyState === 1) {
+    if (Date.now() - ultimoLatido > MUERTO_MS) { vivo = false; pinta(); try { ws.close(); } catch (e) {} }
+    else { try { ws.send('{"t":"ping"}'); } catch (e) {} }
+  } else if (ws.readyState === 3) reconectaPronto(0);
+}, LATIDO_MS);
+
+function despierta() {
+  if (document.visibilityState === 'hidden') return;
+  if (!ws || ws.readyState !== 1) { reconectaPronto(0); return; }
+  var marca = ultimoLatido;
+  try { ws.send('{"t":"ping"}'); } catch (e) { reconectaPronto(0); return; }
+  setTimeout(function () {
+    if (ultimoLatido === marca) { vivo = false; pinta(); try { ws.close(); } catch (e2) {} reconectaPronto(0); }
+  }, 2000);
+}
+document.addEventListener('visibilitychange', despierta);
+window.addEventListener('pageshow', despierta);
+window.addEventListener('focus', despierta);
+window.addEventListener('online', despierta);
+
+pinta();
+conecta();
+</script></body></html>
