@@ -29,10 +29,10 @@ if (location.search.indexOf('maqueta') >= 0) document.write('<script src="maquet
 else if (location.search.indexOf('catalogo') >= 0) document.write('<script src="catalogo.js"><\/script>');
 </script>
 <!-- TRANSPORTE: el Bluetooth (ble.js) lo mete CerebroMovil/tools/publicar_web.py antes de
-     <script src="ble.js"></script>
-</head> al publicar; carga antes que korum.js, que hace new WebSocket(...) al arrancar.
+     </head> al publicar; carga antes que korum.js, que hace new WebSocket(...) al arrancar.
      La pagina pinta su propio boton "Conectar con la mesa": que ble.js no saque el suyo. -->
 <script>window.bleBotonPropio = true;</script>
+<script src="ble.js"></script>
 </head><body><div id="app"></div><div id="fx"></div><div id="toast" class="toast fuera"></div>
 <script src="sonido.js"></script>
 <script src="dado.js"></script>
