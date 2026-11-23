@@ -472,4 +472,30 @@
   Fake.prototype.close = function () {};
   window.WebSocket = Fake;
   setInterval(function () { if (S.bu) manda(); }, 1000);
+
+  /* KorumWeb: un panel pequeno a la izquierda con lo que en la mesa se hace con la
+     figura (lo mismo que window.maqueta desde la consola). ?maqueta&limpia lo quita */
+  if (location.search.indexOf('limpia') < 0) document.addEventListener('DOMContentLoaded', function () {
+    var p = document.createElement('div'), abierto = false;
+    p.className = 'maq';
+    function pinta() {
+      p.innerHTML = '<button class="abrir">MAQUETA' + (abierto ? ' &#9666;' : ' &#9656;') + '</button>' + (abierto ?
+        [['figura', 'Poner figura'], ['mover', 'Mover figura'], ['noLlega', 'No llega'], ['otro', 'Otro movil'],
+         ['golpe', 'Te golpean'], ['oro', '+20 oro'], ['encima', 'Encima de 5']].map(function (b) {
+          return '<button class="sec" data-m="' + b[0] + '">' + b[1] + '</button>';
+        }).join('') : '');
+    }
+    p.onclick = function (e) {
+      var b = e.target.closest('button'), m = b && b.getAttribute('data-m'), r = '';
+      if (!b) return;
+      if (!m) { abierto = !abierto; pinta(); return; }
+      if (m === 'golpe') { if (S.h) { S.h.hp = Math.max(1, S.h.hp - 4); suceso('Te golpean: -4 PV', 2); manda(); } r = 'golpe'; }
+      else if (m === 'oro') { if (S.h) { S.h.o += 20; suceso('+20 de oro', 5); manda(); } r = 'oro'; }
+      else if (m === 'encima') r = window.maqueta.encima(5);
+      else r = window.maqueta[m]();
+      console.log('maqueta: ' + r);
+    };
+    pinta();
+    document.body.appendChild(p);
+  });
 })();

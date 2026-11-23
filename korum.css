@@ -1,0 +1,713 @@
+/* KORUM - la pagina del movil (KorumWeb). Estilos.
+   Paleta: noche y tinta parda, oro viejo, el color del suceso (--k) en cada cartel.
+   Letra: Cinzel (titulos), Spectral (lo que se lee), Barlow Semi Condensed (interfaz).
+   Las animaciones solo mueven transform y opacity (que no pesen en un iPhone), y
+   con "reducir movimiento" se quedan quietas. */
+@font-face{font-family:"Cinzel";src:url(fuentes/cinzel.woff2) format("woff2");font-weight:400 900;font-display:swap}
+@font-face{font-family:"Spectral";src:url(fuentes/spectral-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Spectral";src:url(fuentes/spectral-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Barlow K";src:url(fuentes/barlow-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Barlow K";src:url(fuentes/barlow-700.woff2) format("woff2");font-weight:700;font-display:swap}
+
+:root{
+ --noche:#0c090b; --fondo:#151013; --panel:#1e1815; --panel2:#29211b; --hueco:#0f0b0a;
+ --linea:#3b2f25; --linea2:#5a4733;
+ --tinta:#f0e5cd; --tinta2:#c2b293; --tinta3:#8c7b62;
+ --oro:#d9ae45; --oro2:#f6dc8c; --oro3:#8f6b1e;
+ --rojo:#d9614c; --verde:#7cb86a; --azul:#55a9d0; --morado:#a08fe0; --rosa:#df94e6;
+ --k:var(--oro);
+ --f-tit:"Cinzel","Iowan Old Style","Palatino Linotype",Georgia,serif;
+ --f-txt:"Spectral","Iowan Old Style",Georgia,serif;
+ --f-ui:"Barlow K","Barlow Semi Condensed","Avenir Next Condensed",system-ui,sans-serif;
+ --sa-t:env(safe-area-inset-top); --sa-b:env(safe-area-inset-bottom);
+ --sa-l:env(safe-area-inset-left); --sa-r:env(safe-area-inset-right);
+ /* iconos de los estados de los botones (mascaras) */
+ --m-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+ --m-check-osc:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2324180a' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+ --m-candado:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h1.5A1.5 1.5 0 0 1 20 11.5v9A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5v-9A1.5 1.5 0 0 1 5.5 10zm2.5 0h5V7a2.5 2.5 0 0 0-5 0z'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{background:var(--noche);color:var(--tinta);font:500 17px/1.4 var(--f-ui);
+ -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;
+ -webkit-font-smoothing:antialiased}
+img{-webkit-user-drag:none;-webkit-touch-callout:none}
+b{font-weight:700}
+
+/* ── Pantallas: cada una en su capa; al cambiar, la vieja se funde y la nueva entra ── */
+#app{position:fixed;inset:0;height:100dvh;overflow:hidden;
+ background:radial-gradient(120% 70% at 50% 0%,#2a1d16 0%,#151013 55%,#0c090b 100%)}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;
+ padding:var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l);animation:scr-entra .38s cubic-bezier(.2,.7,.3,1) both}
+.scr.sale{animation:scr-sale .26s ease-in forwards;pointer-events:none;z-index:0}
+@keyframes scr-entra{from{opacity:0;transform:scale(1.025)}to{opacity:1;transform:none}}
+@keyframes scr-sale{to{opacity:0;transform:scale(.985)}}
+
+.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 20px;
+ max-width:600px;width:100%;margin:0 auto;position:relative}
+.mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ text-align:center;padding:24px 22px;gap:8px;max-width:480px;width:100%;margin:0 auto;position:relative;z-index:1}
+h1{font:700 26px/1.15 var(--f-tit);margin:0 0 4px;letter-spacing:.04em}
+h1.mal{color:#ec8a74}
+.sub{color:var(--tinta2);font-size:16px;line-height:1.45}
+.gold{color:var(--oro)}
+.estado{font:700 13px var(--f-ui);letter-spacing:.32em;text-transform:uppercase;color:var(--oro)}
+
+/* ── Barra de arriba ── */
+.top{position:relative;z-index:5;display:flex;align-items:center;gap:9px;padding:8px 12px 8px 14px;flex:0 0 auto;
+ font-size:13px;color:var(--tinta3);min-height:44px}
+.top>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--verde);flex:0 0 8px;box-shadow:0 0 8px var(--verde)}
+.dot.off{background:var(--rojo);box-shadow:0 0 8px var(--rojo);animation:parpadea 1s steps(2) infinite}
+@keyframes parpadea{50%{opacity:.3}}
+.top.caido{color:#f0b0a2}
+.top b{color:var(--tinta)}
+.top .dcha{margin-left:auto;display:flex;align-items:center;gap:2px}
+.top .yo{display:flex;align-items:center;gap:6px;color:var(--tinta3);white-space:nowrap}
+.top .yo + .dcha,.top .pills + .dcha{margin-left:6px}
+.top .fs{background:0;border:0;color:var(--tinta2);font-size:20px;padding:6px 9px;width:auto;min-height:0;margin:0;border-radius:10px;
+ box-shadow:none}
+.top .aj.on{background:var(--panel2);color:var(--tinta)}
+.top .pills{margin-left:auto;display:flex;gap:6px}
+.top .pills button{width:auto;min-height:0;margin:0;padding:5px 13px;border-radius:16px;font-size:14px}
+.top .pills + .yo{margin-left:8px}
+.ajmenu{position:absolute;top:100%;right:10px;z-index:30;margin-top:2px;min-width:270px;
+ background:linear-gradient(#2a211b,#1e1815);border:1px solid var(--linea2);border-radius:14px;padding:8px;
+ box-shadow:0 16px 40px rgba(0,0,0,.7);animation:cae .18s ease-out}
+@keyframes cae{from{opacity:0;transform:translateY(-6px)}}
+.ajmenu button{margin:0 0 6px;text-align:left;font-size:16px}
+.ajmenu .nota{font-size:13px;color:var(--tinta3);padding:2px 4px 6px;line-height:1.4}
+.color{width:12px;height:12px;border-radius:50%;flex:0 0 12px;display:inline-block;
+ box-shadow:0 0 0 2px var(--noche),0 0 0 3px var(--linea2)}
+
+/* ── Botones: tipos y estados (la regla, en korum.js "Los botones") ──
+   oro macizo = la accion de una pantalla sin cartel; .op = respuesta al cartel;
+   .sec/.ghost = de menos peso. Estados: .pulsa (hundido), aria-busy (lo tocado,
+   en oro con check y barrita), .apagada (las demas), aria-disabled (bloqueado:
+   rayas, candado), aria-pressed (lo seleccionado de una lista) */
+button{font:700 17px/1.2 var(--f-ui);letter-spacing:.01em;border:0;border-radius:14px;padding:14px 18px;width:100%;
+ min-height:54px;cursor:pointer;margin-top:14px;color:#24180a;position:relative;overflow:hidden;isolation:isolate;
+ background:linear-gradient(180deg,#f3d27a 0%,#d9ae45 48%,#b88a2a 100%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.18),0 4px 14px rgba(0,0,0,.45);
+ transition:transform .18s cubic-bezier(.3,1.6,.5,1),filter .18s,opacity .25s,box-shadow .2s,border-color .2s}
+button.pulsa,button:active{transform:scale(.955) translateY(1px);filter:brightness(1.12);transition-duration:.05s}
+button.sec,.top .pills button,.barra button{background:linear-gradient(180deg,#2e251e,#221b16);color:var(--tinta);
+ border:1px solid var(--linea2);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 10px rgba(0,0,0,.35)}
+button.sec.pulsa,button.sec:active{border-color:var(--oro);background:linear-gradient(180deg,#3a2e24,#2a211a)}
+button.ghost{background:0;border:1px solid var(--linea);color:var(--tinta2);font-size:15px;min-height:46px;padding:10px;box-shadow:none}
+button.ghost.pulsa,button.ghost:active{background:rgba(240,229,205,.06);border-color:var(--linea2)}
+/* una respuesta al cartel: oscuro con filo de oro; al entrar le pasa un brillo */
+button.op{background:linear-gradient(180deg,rgba(54,42,31,.97),rgba(30,23,18,.97));color:var(--tinta);
+ border:1.5px solid rgba(217,174,69,.62);
+ box-shadow:inset 0 1px 0 rgba(255,236,190,.1),inset 0 0 22px rgba(217,174,69,.07),0 4px 14px rgba(0,0,0,.5)}
+button.op .ic{color:var(--oro2)}
+button.op::after{content:"";position:absolute;top:0;bottom:0;left:0;width:55%;z-index:-1;pointer-events:none;
+ background:linear-gradient(100deg,transparent,rgba(246,220,140,.2),transparent);transform:translateX(-130%);
+ animation:barrido 1.3s cubic-bezier(.3,.6,.3,1) .35s}
+@keyframes barrido{to{transform:translateX(280%)}}
+button.op.pulsa,button.op:active{border-color:var(--oro2);background:linear-gradient(180deg,#43331f,#2a2017);
+ box-shadow:inset 0 2px 10px rgba(0,0,0,.55),0 0 0 3px rgba(246,220,140,.2)}
+/* la unica respuesta (Vale, Seguir, Tirar): late para que se vea que toca pulsarla */
+.acciones button.op.unica{animation:boton .35s cubic-bezier(.2,.7,.3,1) both,llama 2.6s ease-in-out 1.2s infinite}
+@keyframes llama{0%,100%{box-shadow:inset 0 1px 0 rgba(255,236,190,.1),0 4px 14px rgba(0,0,0,.5),0 0 0 0 rgba(217,174,69,0)}
+ 50%{box-shadow:inset 0 1px 0 rgba(255,236,190,.1),0 4px 14px rgba(0,0,0,.5),0 0 0 4px rgba(217,174,69,.18),0 0 22px rgba(217,174,69,.3)}}
+/* la accion principal de las pantallas sin cartel: un brillo que pasa cada poco */
+.grande::after,#nombreOk::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;z-index:-1;pointer-events:none;
+ background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-130%);
+ animation:barrido-cta 4.5s ease-in-out 1.2s infinite}
+@keyframes barrido-cta{0%{transform:translateX(-130%)}28%,100%{transform:translateX(330%)}}
+/* enviando: lo que has tocado, mientras la mesa contesta */
+button[aria-busy=true]{color:#24180a!important;border-color:#f6dc8c!important;
+ background:linear-gradient(180deg,#f6da86 0%,#dcb24a 50%,#b98b2b 100%)!important;
+ box-shadow:0 0 0 2px rgba(246,220,140,.55),0 0 30px rgba(217,174,69,.55),inset 0 1px 0 rgba(255,255,255,.5)!important;
+ animation:elegida .45s cubic-bezier(.3,1.5,.5,1)!important;cursor:progress}
+button[aria-busy=true]::before{content:"";display:inline-block;width:20px;height:20px;margin:0 8px 0 -2px;vertical-align:-4px;flex:0 0 20px;
+ background:currentColor;-webkit-mask:var(--m-check) center/contain no-repeat;mask:var(--m-check) center/contain no-repeat;
+ animation:check-in .32s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes check-in{from{transform:scale(0) rotate(-40deg)}}
+button[aria-busy=true]::after{content:"";position:absolute;left:14px;right:14px;top:auto;bottom:6px;width:auto;height:3px;border-radius:2px;z-index:1;
+ background:rgba(36,24,10,.38);transform-origin:0 50%;animation:espera-b 5s linear forwards}
+@keyframes espera-b{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes elegida{0%{transform:scale(.94)}45%{transform:scale(1.045)}100%{transform:none}}
+button[aria-busy=true] .ic,button[aria-busy=true] .mini{display:none}
+button[aria-busy=true] b{color:inherit!important}
+/* las otras respuestas mientras tanto */
+button.apagada{opacity:.26;filter:saturate(.15);transform:scale(.97);box-shadow:none!important;pointer-events:auto}
+button.apagada::after{display:none}
+/* bloqueado: no se puede ahora (tocarlo lo sacude y dice por que) */
+button[aria-disabled=true]{background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 6px,transparent 6px 12px),#1a1512!important;
+ color:#7d6c56!important;border:1.5px dashed #4d3f31!important;box-shadow:none!important;filter:none!important;cursor:not-allowed;animation:none}
+button[aria-disabled=true]::before{content:"";display:inline-block;width:15px;height:15px;margin:0 7px 0 0;vertical-align:-2px;flex:0 0 15px;
+ background:currentColor;-webkit-mask:var(--m-candado) center/contain no-repeat;mask:var(--m-candado) center/contain no-repeat}
+button[aria-disabled=true]::after{display:none}
+button[aria-disabled=true] b{color:inherit!important}
+button[aria-disabled=true].pulsa,button[aria-disabled=true]:active{transform:none}
+/* seleccionado en una lista (configurar la mesa) */
+button[aria-pressed=true]::before{content:"";display:inline-block;width:16px;height:16px;margin:0 5px 0 -3px;vertical-align:-3px;
+ background:currentColor;-webkit-mask:var(--m-check) center/contain no-repeat;mask:var(--m-check) center/contain no-repeat}
+button .mini{width:30px;height:30px;vertical-align:middle;margin:-6px 8px -6px -4px;filter:drop-shadow(0 2px 3px #000a)}
+button .ic{width:22px;height:22px;vertical-align:-5px;margin-right:8px;flex:0 0 22px}
+/* la onda desde el dedo (capa #fx, recortada a la forma del boton) */
+.onda-caja{position:fixed;overflow:hidden;pointer-events:none;z-index:55}
+.onda-caja i{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(.05);
+ background:radial-gradient(circle,rgba(255,244,210,.55) 0%,rgba(246,220,140,.3) 40%,transparent 68%);
+ animation:onda .62s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes onda{60%{opacity:1}to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+/* interruptor (sonido) */
+.interruptor{display:flex!important;align-items:center;justify-content:space-between;gap:10px}
+.interruptor .pista-i{width:48px;height:28px;border-radius:14px;background:#3a2f26;position:relative;flex:0 0 48px;
+ box-shadow:inset 0 1px 3px #000;transition:background .25s}
+.interruptor .pista-i i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#bfae8c;
+ box-shadow:0 2px 4px #000;transition:transform .28s cubic-bezier(.3,1.5,.5,1),background .25s}
+.interruptor[aria-checked=true] .pista-i{background:linear-gradient(180deg,#f3d27a,#b88a2a)}
+.interruptor[aria-checked=true] .pista-i i{transform:translateX(20px);background:#fff8e6}
+/* ── Esperando figura / portada ── */
+.portada{position:absolute;inset:0;z-index:0;overflow:hidden;background:#0c090b}
+/* MenuFondo trae el titulo viejo ("KHORUM") pintado arriba: la imagen va mas alta que
+   la pantalla, pegada abajo, para que no se vea (DOCS/10: rehacerla sin titulo) */
+.portada img{position:absolute;left:0;right:0;bottom:0;width:100%;height:132%;object-fit:cover;object-position:50% 100%;opacity:.62;
+ transform-origin:50% 100%;
+ animation:kb 28s ease-in-out infinite alternate}
+.portada::after{content:"";position:absolute;inset:0;
+ background:radial-gradient(90% 70% at 50% 45%,rgba(12,9,11,.15),rgba(12,9,11,.82) 80%),linear-gradient(transparent 55%,#0c090b)}
+@keyframes kb{from{transform:scale(1.02) translate3d(0,0,0)}to{transform:scale(1.14) translate3d(-2%,-1.5%,0)}}
+.logo{font:800 clamp(44px,13vw,64px)/1 var(--f-tit);letter-spacing:.16em;margin:0 0 6px .16em;
+ background:linear-gradient(180deg,#fff1c4 0%,#e9c565 45%,#a77a22 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 3px 10px rgba(0,0,0,.8));animation:logo 1.2s cubic-bezier(.2,.7,.3,1) both}
+@keyframes logo{from{opacity:0;letter-spacing:.5em;transform:translateY(8px)}}
+.lema{font:italic 400 18px/1.45 var(--f-txt);color:var(--tinta);max-width:330px;text-shadow:0 2px 8px #000}
+.mid .grande{max-width:330px;font-size:19px;min-height:60px;margin-top:22px}
+.cuenta{font:700 46px/1 var(--f-tit);color:var(--tinta);margin:4px 0 2px}
+.cuenta small{font:500 14px var(--f-ui);color:var(--tinta3);letter-spacing:.2em;display:block;margin-top:6px}
+
+.rueda{width:54px;height:54px;border-radius:50%;margin:4px auto 12px;flex:0 0 auto;
+ background:conic-gradient(from 0deg,rgba(217,174,69,0) 0deg,rgba(217,174,69,.12) 120deg,#d9ae45 320deg,#f6dc8c 360deg);
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));
+ mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));
+ animation:gira 1.1s linear infinite}
+.rueda.peq{width:34px;height:34px;margin:0 auto 8px}
+@keyframes gira{to{transform:rotate(360deg)}}
+/* Escaneando: un circulo de runas que gira despacio, el aro dorado deprisa y la figura */
+.espera{position:relative;width:168px;height:168px;margin:4px 0 14px;flex:0 0 auto}
+.espera .runas{position:absolute;inset:0;animation:gira 26s linear infinite;opacity:.75}
+.espera .rueda{position:absolute;inset:16px;width:auto;height:auto;margin:0}
+.espera .fig{position:absolute;left:53px;top:50px;width:62px;height:62px}
+.espera::after{content:"";position:absolute;inset:16px;border-radius:50%;border:2px solid var(--oro);opacity:0;
+ animation:ping 2.4s cubic-bezier(.2,.6,.3,1) infinite}
+@keyframes ping{0%{transform:scale(.8);opacity:.6}100%{transform:scale(1.5);opacity:0}}
+.cruz{width:92px;height:92px;margin:4px 0 12px;animation:sacude .4s ease-in-out .95s}
+.cruz circle{fill:none;stroke:var(--rojo);stroke-width:4;stroke-dasharray:227;stroke-dashoffset:227;animation:traza .5s ease-out forwards}
+.cruz path{fill:none;stroke:var(--rojo);stroke-width:7;stroke-linecap:round;stroke-dasharray:38;stroke-dashoffset:38;animation:traza .22s ease-out forwards}
+.cruz path:nth-of-type(1){animation-delay:.45s}
+.cruz path:nth-of-type(2){animation-delay:.68s}
+@keyframes traza{to{stroke-dashoffset:0}}
+@keyframes sacude{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* Figura encontrada */
+.espera.ok .runas,.espera.ok::after{display:none}
+.espera.ok .aro{position:absolute;inset:16px;width:136px;height:136px;transform:rotate(-90deg)}
+.espera.ok .aro circle{fill:none;stroke:var(--verde);stroke-width:7;stroke-linecap:round;stroke-dasharray:405;stroke-dashoffset:290;
+ animation:cierra .7s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes cierra{to{stroke-dashoffset:0}}
+.espera.ok .brillo{position:absolute;inset:16px;border-radius:50%;opacity:0;
+ box-shadow:0 0 30px rgba(124,184,106,.5),inset 0 0 18px rgba(124,184,106,.25);animation:aparece .5s ease-out .6s forwards}
+.espera.ok .late{position:absolute;inset:16px;border-radius:50%;border:3px solid var(--verde);opacity:0;animation:late-ok 1s ease-out .7s forwards}
+@keyframes late-ok{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+.espera.ok .fig{animation:se-va .3s ease-in .15s forwards}
+@keyframes se-va{to{transform:scale(.4);opacity:0}}
+.espera.ok .check{position:absolute;left:53px;top:53px;width:62px;height:62px;transform:scale(.6);opacity:0;
+ animation:entra-ok .35s cubic-bezier(.3,1.6,.5,1) .4s forwards}
+.espera.ok .check path{stroke-dasharray:50;stroke-dashoffset:50;animation:traza .35s ease-out .5s forwards}
+@keyframes entra-ok{to{transform:scale(1);opacity:1}}
+@keyframes aparece{to{opacity:1}}
+.estado.ok{color:var(--verde);animation:sube .3s ease-out .5s both}
+@keyframes sube{from{opacity:0;transform:translateY(8px)}}
+
+/* ── El heroe ── */
+.heroe{display:flex;gap:12px;align-items:center;padding:10px 12px 10px 10px;border-radius:18px;position:relative;
+ background:linear-gradient(135deg,rgba(48,38,30,.92),rgba(26,20,17,.92));border:1px solid var(--linea);
+ box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.med{position:relative;flex:0 0 66px;width:66px;height:66px;border-radius:50%;padding:3px;
+ background:conic-gradient(from 200deg,var(--col,#d9ae45),#f6dc8c,var(--col,#d9ae45),#6b4f17,var(--col,#d9ae45))}
+.med .cara{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--hueco)}
+.med .cara img{width:100%;height:100%;object-fit:cover;display:block}
+.med .pts{position:absolute;right:-4px;top:-4px;min-width:24px;height:24px;border-radius:12px;padding:0 6px;
+ background:var(--oro);color:#24180a;font:700 14px/24px var(--f-ui);text-align:center;box-shadow:0 0 0 2px var(--noche);
+ animation:late-pts 2s ease-in-out infinite}
+@keyframes late-pts{50%{transform:scale(1.12)}}
+.hinfo{flex:1;min-width:0}
+.hfila{display:flex;align-items:baseline;gap:8px}
+.nombre{font:700 22px/1.1 var(--f-tit);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oficio{color:var(--tinta3);font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
+.oro{margin-left:auto;display:flex;align-items:center;gap:5px;color:var(--oro2);font:700 19px var(--f-ui);white-space:nowrap}
+.oro img{width:24px;height:24px;filter:drop-shadow(0 1px 2px #000)}
+.vida{margin-top:7px}
+.bar{position:relative;height:16px;border-radius:9px;background:var(--hueco);overflow:hidden;
+ box-shadow:inset 0 1px 3px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.05)}
+.bar i,.bar b{position:absolute;left:0;top:0;bottom:0;border-radius:9px}
+.bar b{background:#e8c070;transition:width .9s cubic-bezier(.4,0,.2,1) .35s}
+.bar i{background:linear-gradient(180deg,#9fd487,#5f9e4c 60%,#4a823b);transition:width .35s ease-out;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.bar.low i{background:linear-gradient(180deg,#f08a73,#c4452f 60%,#9d3523);animation:pulso-v 1.2s ease-in-out infinite}
+@keyframes pulso-v{50%{opacity:.7}}
+.bar span{position:absolute;right:8px;top:0;font:700 12px/16px var(--f-ui);color:#fff;text-shadow:0 1px 2px #000}
+.bar span.izq{left:8px;right:auto;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.xp{position:relative;height:5px;border-radius:3px;background:var(--hueco);margin-top:5px;overflow:hidden}
+.xp i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#7d6ccc,#b6a8ff);border-radius:3px;transition:width .6s ease-out}
+.xptxt{font-size:12px;color:var(--tinta3);margin-top:3px;letter-spacing:.06em}
+
+/* ── Pestanas, con la raya que se desliza ── */
+.tabs{position:relative;display:flex;flex:0 0 auto;width:100%;max-width:600px;margin:0 auto;padding:0 8px}
+.tabs button{flex:1;background:0;box-shadow:none;color:var(--tinta3);border:0;border-radius:0;margin:0;min-height:44px;
+ font:700 14px var(--f-ui);letter-spacing:.2em;text-transform:uppercase;padding:8px 4px;transition:color .2s}
+.tabs button.on{color:var(--oro2)}
+.tabs button:active{transform:none}
+.tabs .ind{position:absolute;bottom:0;left:8px;height:2px;width:calc((100% - 16px) / 3);
+ background:linear-gradient(90deg,transparent,var(--oro),transparent);transition:transform .3s cubic-bezier(.3,.7,.3,1)}
+.tabs::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--linea)}
+.tabs .badge{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--oro);margin-left:6px;vertical-align:2px;
+ box-shadow:0 0 8px var(--oro);animation:pulso-v 1s ease-in-out infinite}
+
+/* ── La escena: la ilustracion del cartel, a sangre ── */
+.escena{position:relative;margin:14px -16px 0;height:clamp(180px,34dvh,320px);overflow:hidden;background:var(--hueco);
+ animation:aparece-e .6s ease-out both}
+@keyframes aparece-e{from{opacity:0}}
+.escena .kb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 45%;
+ animation:kb 22s ease-in-out infinite alternate;will-change:transform}
+.escena::after{content:"";position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(180deg,rgba(12,9,11,.35) 0%,transparent 22%,transparent 50%,rgba(21,16,19,.92) 88%,var(--fondo) 100%)}
+.escena .esc-tt{position:absolute;left:18px;right:18px;bottom:12px;z-index:2;font:800 28px/1.08 var(--f-tit);letter-spacing:.05em;
+ text-shadow:0 2px 12px #000,0 0 2px #000;color:var(--tinta);animation:titulo .55s cubic-bezier(.2,.7,.3,1) both}
+.escena .esc-tt small{display:block;font:700 12px var(--f-ui);letter-spacing:.3em;color:var(--k);text-transform:uppercase;margin-bottom:4px;
+ text-shadow:0 1px 6px #000}
+@keyframes titulo{from{opacity:0;transform:translateY(14px);letter-spacing:.14em}}
+/* Combate: el bicho entero, sobre si mismo emborronado, con velo rojo */
+.escena.lucha .borroso{position:absolute;inset:-30px;width:calc(100% + 60px);height:calc(100% + 60px);object-fit:cover;
+ filter:blur(16px) saturate(1.2) brightness(.55)}
+.escena.lucha .bicho{position:absolute;left:50%;top:6%;height:84%;width:auto;max-width:92%;transform:translateX(-50%);
+ border-radius:10px;object-fit:contain;animation:bicho 3.5s ease-in-out infinite;
+ -webkit-mask:radial-gradient(closest-side,#000 70%,transparent);mask:radial-gradient(closest-side,#000 70%,transparent)}
+@keyframes bicho{50%{transform:translateX(-50%) scale(1.035)}}
+.escena.lucha::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:radial-gradient(80% 90% at 50% 40%,transparent 45%,rgba(140,20,10,.55))}
+.vidaB{position:absolute;left:18px;right:18px;bottom:50px;z-index:2;display:flex;align-items:center;gap:10px}
+.vidaB .bar{flex:1;height:10px}
+.vidaB .bar i{background:linear-gradient(180deg,#f08a73,#c4452f 60%,#9d3523)}
+.vidaB span{font:700 13px var(--f-ui);color:#fff;text-shadow:0 1px 3px #000;white-space:nowrap}
+/* PNJ: el sitio de fondo y el retrato en un medallon */
+.escena.pnj{height:clamp(170px,28dvh,250px)}
+.escena.pnj .kb{filter:brightness(.6) saturate(.9)}
+.retrato{position:absolute;left:50%;bottom:16px;z-index:2;width:132px;height:132px;margin-left:-66px;border-radius:50%;padding:4px;
+ background:conic-gradient(from 210deg,var(--k),#f6dc8c,var(--k),#3a2a10,var(--k));box-shadow:0 10px 30px rgba(0,0,0,.7);
+ animation:retrato .6s cubic-bezier(.3,1.4,.5,1) both}
+.retrato img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;background:var(--hueco)}
+@keyframes retrato{from{opacity:0;transform:scale(.6) translateY(20px)}}
+/* Un objeto: en el aire, sobre un brillo de su color */
+.escena.cosa{height:clamp(160px,26dvh,230px);background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--k) 45%,transparent),transparent 60%),var(--hueco)}
+.escena.cosa .obj{position:absolute;left:50%;top:50%;width:132px;height:132px;margin:-70px 0 0 -66px;z-index:2;
+ filter:drop-shadow(0 12px 16px rgba(0,0,0,.7));animation:flota 3s ease-in-out infinite}
+@keyframes flota{50%{transform:translateY(-8px) rotate(-3deg)}}
+.escena.cosa .rayos{position:absolute;left:50%;top:50%;width:420px;height:420px;margin:-210px;opacity:.22;
+ background:repeating-conic-gradient(var(--k) 0deg 6deg,transparent 6deg 24deg);border-radius:50%;
+ -webkit-mask:radial-gradient(closest-side,#000,transparent);mask:radial-gradient(closest-side,#000,transparent);
+ animation:gira 40s linear infinite}
+
+/* ── El texto del cartel ── */
+.cartel{position:relative;margin-top:2px;padding:10px 4px 4px;text-align:center;animation:cartel .45s cubic-bezier(.2,.7,.3,1) both}
+.cartel.solo{margin-top:16px;padding:18px 16px 18px;border-radius:18px;border:1px solid var(--linea);
+ background:linear-gradient(180deg,rgba(41,33,27,.9),rgba(26,20,17,.9));box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.cartel.solo::before{content:"";position:absolute;left:18%;right:18%;top:-1px;height:2px;
+ background:linear-gradient(90deg,transparent,var(--k),transparent);box-shadow:0 0 12px var(--k)}
+@keyframes cartel{from{opacity:0;transform:translateY(10px)}}
+.cartel .tt{font:800 23px/1.15 var(--f-tit);letter-spacing:.05em;color:var(--k)}
+.cartel .tx{margin-top:8px;font:400 19px/1.5 var(--f-txt);white-space:pre-line;color:var(--tinta);text-wrap:pretty}
+.cartel .linea-k{display:block;width:64px;height:2px;margin:0 auto 10px;background:var(--k);box-shadow:0 0 10px var(--k);border-radius:1px}
+/* Tirada: un d20 en 3D (dado.js) que cae y rueda; al pararse, ondas del color del
+   resultado (--rc) y el veredicto como un sello */
+.tirada{display:flex;align-items:center;justify-content:center;gap:16px;margin:8px 0 4px;position:relative;z-index:4}
+.dado{position:relative;width:104px;height:104px;flex:0 0 104px;z-index:4}
+.escena.baja{height:clamp(150px,25dvh,240px);transition:height .4s ease}
+.d20{position:absolute;left:50%;top:50%;width:0;height:0;perspective:700px;z-index:1}
+.d20-cuerpo{position:absolute;left:0;top:0;transform-style:preserve-3d;will-change:transform}
+.d20 .f{position:absolute;left:calc(var(--a) * -.5);top:calc(var(--a) * -.57735);width:var(--a);height:calc(var(--a) * .8660254);
+ transform-origin:50% 66.6667%;-webkit-clip-path:polygon(50% 0,100% 100%,0 100%);clip-path:polygon(50% 0,100% 100%,0 100%);
+ background:#d6b25a;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.d20 .f::before{content:"";position:absolute;inset:0;
+ background:radial-gradient(90% 70% at 50% 70%,#6e3350 0%,#3a1528 55%,#1f0a16 100%);
+ -webkit-clip-path:polygon(50% 6%,95.6% 96.6%,4.4% 96.6%);clip-path:polygon(50% 6%,95.6% 96.6%,4.4% 96.6%)}
+.d20 .f b{position:absolute;left:0;right:0;top:calc(var(--a) * .405);z-index:1;text-align:center;
+ font:800 calc(var(--a) * .33)/1 var(--f-tit);color:#f3d27a;text-shadow:0 1px 0 #000}
+.d20 .f b.raya{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:1px}
+.d20 .f i{position:absolute;inset:0;z-index:2;background:#000;opacity:.3;pointer-events:none}
+.d20-sombra{position:absolute;left:calc(var(--a) * -.85);top:calc(var(--a) * .72);width:calc(var(--a) * 1.7);height:calc(var(--a) * .42);
+ border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.7),transparent)}
+.d20.brilla .f.frente{background:var(--rc);transition:background .3s}
+.d20.brilla .f.frente b{color:#fff;text-shadow:0 0 5px var(--rc),0 0 12px var(--rc),0 1px 0 #000}
+.d20.brilla .f.frente i{opacity:0!important}
+.tirada .cuentas{text-align:left;font:700 16px/1.3 var(--f-ui);color:var(--tinta2);opacity:0}
+.tirada .cuentas b{font-size:26px;color:var(--tinta);display:inline-block}
+.tirada .cd{display:block;font-size:14px;color:var(--tinta3);margin-top:1px}
+.tirada .veredicto{display:inline-block;margin-top:6px;padding:3px 12px 2px;border-radius:8px;font:800 15px var(--f-tit);letter-spacing:.14em;
+ text-transform:uppercase;color:var(--rc);border:2px solid var(--rc);transform:rotate(-3deg);
+ background:color-mix(in srgb,var(--rc) 14%,rgba(12,9,11,.6));box-shadow:0 0 18px color-mix(in srgb,var(--rc) 45%,transparent)}
+.ondas{position:absolute;left:50%;top:50%;width:0;height:0;z-index:0;pointer-events:none}
+.ondas i{position:absolute;left:-46px;top:-46px;width:92px;height:92px;border-radius:50%;border:3px solid var(--rc);opacity:0;
+ box-shadow:0 0 18px var(--rc),inset 0 0 14px var(--rc);animation:onda-d 1.35s cubic-bezier(.15,.6,.3,1) forwards}
+@keyframes onda-d{0%{transform:scale(.45);opacity:.95}100%{transform:scale(3.2);opacity:0}}
+.ondas b{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:#fff4c8;
+ box-shadow:0 0 8px #ffd36a,0 0 16px #ffb020;animation:chispa 1.1s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes chispa{0%{transform:rotate(var(--g)) translateX(12px) scale(1.2);opacity:1}100%{transform:rotate(var(--g)) translateX(var(--l)) scale(.2);opacity:0}}
+.res-crit .veredicto{animation:arcoiris 1.6s linear infinite}
+@keyframes arcoiris{50%{box-shadow:0 0 28px #ffd36a,0 0 6px #fff}}
+.mover{display:flex;align-items:center;gap:12px;margin-top:14px;padding:11px 13px;border-radius:14px;text-align:left;
+ background:rgba(240,229,205,.06);border:1px dashed rgba(240,229,205,.5);font-size:16px;line-height:1.35}
+.mover svg{flex:0 0 34px;height:34px}
+.calma{margin-top:16px;text-align:center;color:var(--tinta2);font-size:16px;padding:24px 14px;border:1px dashed var(--linea2);border-radius:18px}
+.calma b{display:block;color:var(--tinta);font:700 20px var(--f-tit);margin-bottom:4px}
+.calma button{max-width:260px}
+.dia{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--tinta3);letter-spacing:.04em}
+.dia .tuyo{color:#24180a;background:var(--oro);padding:2px 10px;border-radius:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:12px;
+ animation:late-pts 1.6s ease-in-out infinite}
+.pisado{margin-top:12px;border:1px solid var(--linea);border-left:4px solid var(--oro);border-radius:12px;
+ background:var(--panel);padding:9px 12px;font:400 15px/1.4 var(--f-txt);color:var(--tinta2);animation:cartel .3s ease-out}
+.pisado b{display:block;font:700 12px var(--f-ui);letter-spacing:.2em;text-transform:uppercase;margin-bottom:2px}
+
+h2{font:700 13px var(--f-ui);text-transform:uppercase;letter-spacing:.28em;color:var(--tinta3);margin:26px 0 10px;
+ display:flex;align-items:center;gap:10px}
+h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--linea2),transparent)}
+
+/* ── Diario ── */
+.diario{list-style:none;padding:0;margin:0;position:relative}
+.diario::before{content:"";position:absolute;left:13px;top:6px;bottom:6px;width:2px;background:var(--linea)}
+.diario li{position:relative;padding:8px 10px 8px 38px;font-size:16px;color:var(--tinta);animation:cartel .3s ease-out both}
+.diario li i{position:absolute;left:4px;top:8px;width:20px;height:20px;border-radius:50%;background:var(--panel);
+ border:2px solid var(--c);box-shadow:0 0 8px color-mix(in srgb,var(--c) 60%,transparent);font:700 11px/16px var(--f-ui);
+ text-align:center;font-style:normal;color:var(--c)}
+.diario li:first-child{font-weight:700}
+
+/* ── Hoja ── */
+.aviso{background:rgba(217,174,69,.1);border:1px solid var(--oro3);border-radius:14px;padding:11px 14px;margin-top:14px;font-size:16px}
+.aviso.malo{border-color:var(--rojo);background:rgba(217,97,76,.12)}
+.skills{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sk{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--linea)}
+.sk span{flex:1;color:var(--tinta2);font-size:15px}
+.sk b{font:800 22px var(--f-tit);color:var(--tinta);font-variant-numeric:tabular-nums}
+.sk .pip{position:absolute}
+.mochila{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.it{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px 8px;border-radius:14px;text-align:center;
+ background:radial-gradient(circle at 50% 35%,rgba(217,174,69,.14),transparent 70%),var(--panel);border:1px solid var(--linea);font-size:14px}
+.it img{width:56px;height:56px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.it.vacio{grid-column:1/-1;color:var(--tinta3);font-style:italic;border-style:dashed;padding:16px}
+.compa{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--linea);font-size:17px}
+.compa .ficha{width:30px;height:30px;border-radius:50%;flex:0 0 30px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),transparent 45%),var(--c);
+ box-shadow:0 0 0 2px var(--noche),0 0 0 3px var(--c),0 3px 8px #000}
+.compa .e{margin-left:auto;font-size:14px;padding:2px 10px;border-radius:10px;background:var(--panel2);color:var(--tinta2)}
+.compa.off{opacity:.5}
+.compa .tu{color:var(--oro);font-size:12px;text-transform:uppercase;letter-spacing:.16em;margin-left:6px}
+.enfig{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:15px;color:var(--tinta2)}
+.enfig b{color:var(--tinta)}
+.enfig .pto{flex:0 0 10px;height:10px;border-radius:50%;background:var(--tinta3)}
+.enfig.ok .pto{background:var(--verde);box-shadow:0 0 8px var(--verde)}
+.enfig.mal .pto{background:var(--rojo)}
+.enfig.pend .pto{background:var(--oro);animation:pulso-v 1s infinite}
+
+/* ── Mapa ── */
+.mapa{margin-top:12px;border-radius:18px;padding:6px;position:relative;
+ background:radial-gradient(80% 80% at 50% 50%,#211914,#0f0b0a);border:1px solid var(--linea);box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+.mapa svg{display:block;width:100%;height:auto;max-height:60vh}
+.mapa .tx-l{font:700 9px var(--f-tit);letter-spacing:.06em;fill:var(--tinta);paint-order:stroke;stroke:#000;stroke-width:2.6px;stroke-linejoin:round}
+.mapa .va{animation:late-va 1.4s ease-in-out infinite}
+@keyframes late-va{50%{stroke-opacity:.25}}
+.mapa .yo-pulso{transform-box:fill-box;transform-origin:center;animation:ping 2s ease-out infinite}
+.leyenda{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;color:var(--tinta2);margin-top:10px;justify-content:center}
+.leyenda span{display:flex;align-items:center;gap:6px}
+
+/* ── Las opciones, abajo ── */
+.acciones{flex:0 0 auto;width:100%;max-width:600px;margin:0 auto;position:relative;z-index:3;
+ padding:12px 14px calc(12px + 2px);display:grid;grid-template-columns:1fr;gap:9px;
+ background:linear-gradient(180deg,rgba(21,16,19,0),rgba(21,16,19,.96) 18px,var(--fondo))}
+.acciones.dos{grid-template-columns:1fr 1fr}
+.acciones.tres{grid-template-columns:repeat(3,1fr)}
+.acciones button{margin:0;min-height:56px;padding:10px 10px;font-size:17px;display:flex;align-items:center;justify-content:center;text-align:center;
+ animation:boton .35s cubic-bezier(.2,.7,.3,1) both}
+.acciones button:nth-child(2){animation-delay:.04s}.acciones button:nth-child(3){animation-delay:.08s}
+.acciones button:nth-child(4){animation-delay:.12s}.acciones button:nth-child(5){animation-delay:.16s}
+.acciones button:nth-child(n+6){animation-delay:.2s}
+@keyframes boton{from{opacity:0;transform:translateY(10px)}}
+.acciones.muchas button{min-height:48px;font-size:16px}
+.acciones .pregunta{grid-column:1/-1;font:700 13px var(--f-ui);letter-spacing:.28em;text-transform:uppercase;color:var(--oro);text-align:center}
+.barra{display:flex;gap:9px;margin-top:2px}
+.barra button{flex:1;margin:0;min-height:44px;padding:6px 8px;font-size:15px;color:var(--tinta2);animation:none}
+.barra button b,.top .pills button b{color:var(--oro);margin-right:6px}
+
+/* ── Sucesos (lo que pasa): una cinta que cae desde arriba ── */
+.toast{position:fixed;left:50%;top:calc(var(--sa-t) + 50px);z-index:40;display:flex;align-items:center;gap:10px;
+ transform:translate(-50%,0);background:linear-gradient(180deg,#30261e,#211a15);border:1px solid var(--tc,var(--oro));color:var(--tinta);
+ padding:9px 18px 9px 10px;border-radius:24px;font:700 16px var(--f-ui);
+ box-shadow:0 10px 30px rgba(0,0,0,.6),0 0 18px color-mix(in srgb,var(--tc,var(--oro)) 35%,transparent);
+ white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;transition:opacity .35s,transform .35s cubic-bezier(.3,1.4,.5,1)}
+.toast i{width:28px;height:28px;flex:0 0 28px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--f-ui);font-style:normal;
+ background:color-mix(in srgb,var(--tc,var(--oro)) 25%,transparent);color:var(--tc,var(--oro))}
+.toast i img{width:24px;height:24px}
+.toast.fuera{opacity:0;transform:translate(-50%,-24px);pointer-events:none}
+
+/* ── Efectos sobre todo (capa #fx): golpe, cura, oro, nivel, tu turno ── */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+#fx .velo{position:absolute;inset:0;opacity:0;animation:velo .7s ease-out forwards}
+#fx .velo.golpe{background:radial-gradient(ellipse at center,transparent 40%,rgba(200,30,20,.65))}
+#fx .velo.cura{background:radial-gradient(ellipse at center,transparent 45%,rgba(110,200,100,.45))}
+#fx .velo.oro{background:radial-gradient(ellipse at center,transparent 50%,rgba(230,180,60,.35))}
+@keyframes velo{15%{opacity:1}100%{opacity:0}}
+#fx .flota{position:absolute;font:800 26px var(--f-tit);text-shadow:0 2px 6px #000,0 0 2px #000;animation:flota-n 1.3s ease-out forwards;white-space:nowrap}
+#fx .flota img{width:26px;height:26px;vertical-align:-4px;margin-right:4px}
+@keyframes flota-n{0%{opacity:0;transform:translate(-50%,6px) scale(.7)}15%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}
+ 100%{opacity:0;transform:translate(-50%,-56px) scale(1)}}
+#fx .cinta{position:absolute;left:0;right:0;top:38%;height:96px;display:grid;place-items:center;
+ background:linear-gradient(90deg,transparent,rgba(12,9,11,.92) 18%,rgba(12,9,11,.92) 82%,transparent);
+ border-top:1px solid var(--oro3);border-bottom:1px solid var(--oro3);animation:cinta 1.9s cubic-bezier(.2,.7,.3,1) forwards}
+#fx .cinta span{font:800 38px var(--f-tit);letter-spacing:.18em;color:var(--oro2);text-shadow:0 0 18px rgba(217,174,69,.6);
+ animation:cinta-t 1.9s cubic-bezier(.2,.7,.3,1) forwards}
+#fx .cinta small{display:block;text-align:center;font:700 13px var(--f-ui);letter-spacing:.3em;color:var(--tinta2);margin-top:2px}
+@keyframes cinta{0%{opacity:0;transform:scaleY(0)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes cinta-t{0%{opacity:0;letter-spacing:.6em}20%{opacity:1;letter-spacing:.18em}100%{letter-spacing:.24em}}
+#fx .estallido{position:absolute;left:50%;top:40%;width:600px;height:600px;margin:-300px;border-radius:50%;opacity:0;
+ background:repeating-conic-gradient(rgba(246,220,140,.5) 0deg 5deg,transparent 5deg 20deg);
+ -webkit-mask:radial-gradient(closest-side,#000 10%,transparent);mask:radial-gradient(closest-side,#000 10%,transparent);
+ animation:estallido 1.8s ease-out forwards}
+@keyframes estallido{0%{opacity:0;transform:scale(.3) rotate(0)}20%{opacity:1}100%{opacity:0;transform:scale(1.2) rotate(40deg)}}
+.tiembla{animation:tiembla .4s linear}
+@keyframes tiembla{20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}}
+
+/* ── Sin conexion: un velo encima de todo ── */
+.caida{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+ padding:30px 26px calc(30px + var(--sa-b));text-align:center;background:rgba(12,9,11,.86);animation:aparece-e .35s ease-out both}
+.caida h1{margin-top:6px}
+.caida .grande,.mid .grande{max-width:340px}
+.caida svg.eslabon{width:84px;height:84px}
+.ayuda{position:relative;z-index:1;font-size:14px;color:var(--tinta3);text-align:center;padding:4px 16px 10px;flex:0 0 auto;line-height:1.45}
+.ayuda button.mas,.crear .mas{background:0;box-shadow:none;border:0;color:var(--tinta2);font:500 14px var(--f-ui);padding:8px 0;margin:0;min-height:0;width:auto;
+ text-decoration:underline;text-underline-offset:3px}
+.ayuda.abierta{text-align:left;color:var(--tinta2);max-height:46vh;overflow-y:auto;padding:12px 18px;background:rgba(12,9,11,.85)}
+.ayuda.abierta b{color:var(--tinta)}
+.ayuda.abierta ol{margin:7px 0 2px;padding-left:20px}
+.ayuda.abierta li{margin-bottom:7px}
+.ayuda.abierta button.mas{display:block;margin:4px auto 0}
+
+/* ── Crear el heroe ── */
+.crear{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:10px;text-align:center;padding:12px 16px 18px;width:100%;max-width:820px;margin:0 auto;position:relative;z-index:1}
+.pasos3{display:flex;gap:8px;align-items:center;font:700 12px var(--f-ui);letter-spacing:.3em;color:var(--tinta3);text-transform:uppercase}
+.pasos3 i{width:26px;height:4px;border-radius:2px;background:var(--linea2)}
+.pasos3 i.on{background:var(--oro);box-shadow:0 0 8px var(--oro)}
+.crear h1{margin:2px 0 0;font-size:28px}
+.crear .sub b{letter-spacing:.12em}
+.crear .nombreIn{width:100%;max-width:380px;padding:14px 16px 12px;font:700 28px var(--f-tit);text-align:center;background:transparent;color:var(--tinta);
+ border:0;border-bottom:2px solid var(--linea2);border-radius:0;text-transform:uppercase;letter-spacing:.16em;outline:none;margin-top:10px;
+ -webkit-user-select:text;user-select:text;transition:border-color .2s}
+.crear .nombreIn:focus{border-color:var(--oro)}
+.crear .nombreIn::placeholder{text-transform:none;letter-spacing:0;color:var(--tinta3);font:400 italic 20px var(--f-txt)}
+.crear #nombreOk{max-width:380px;margin-top:14px}
+.cartas{--h:min(44dvh,360px);display:grid;grid-template-columns:repeat(3,minmax(0,calc(var(--h) / 2)));justify-content:center;gap:10px;margin-top:8px;width:100%}
+.cartas.cuatro{--h:min(30dvh,300px);grid-template-columns:repeat(2,minmax(0,calc(var(--h) / 2 + 20px)))}
+.crear.h .cartas,.crear.h .cartas.cuatro{--h:min(calc(100dvh - 150px),330px)}
+.crear.h .cartas.cuatro{grid-template-columns:repeat(4,minmax(0,calc(var(--h) / 2)))}
+.cartas button{margin:0;min-height:0;width:100%;min-width:0;padding:0;border-radius:14px;overflow:hidden;position:relative;background:var(--hueco);
+ border:1px solid var(--linea2);box-shadow:0 8px 20px rgba(0,0,0,.5);display:block;animation:carta .5s cubic-bezier(.2,.7,.3,1) both}
+.cartas button:nth-child(2){animation-delay:.07s}.cartas button:nth-child(3){animation-delay:.14s}.cartas button:nth-child(4){animation-delay:.21s}
+@keyframes carta{from{opacity:0;transform:translateY(24px) rotate(-2deg)}}
+.cartas .lamina{display:block;width:100%;height:auto;aspect-ratio:1/2;max-height:var(--h);object-fit:cover}
+.cartas span{position:absolute;left:0;right:0;bottom:0;padding:26px 4px 9px;font:800 16px var(--f-tit);letter-spacing:.06em;color:var(--tinta);
+ background:linear-gradient(transparent,rgba(12,9,11,.92) 55%)}
+.cartas button.elegida{transform:translateY(-6px)}
+
+/* ── Configurar la mesa ── */
+.pasos{margin:4px 0 0;padding:0;list-style:none;counter-reset:p;font-size:15px;color:var(--tinta2)}
+.pasos li{counter-increment:p;display:flex;gap:10px;margin-bottom:8px;line-height:1.4}
+.pasos li::before{content:counter(p);flex:0 0 24px;height:24px;border-radius:50%;background:var(--panel2);border:1px solid var(--oro3);
+ color:var(--oro);font-weight:700;font-size:13px;display:grid;place-items:center}
+.pasos b{color:var(--tinta)}
+.sel{background:var(--panel);border:1px solid var(--oro);border-radius:16px;padding:12px 14px;margin-top:12px;box-shadow:0 0 18px rgba(217,174,69,.15)}
+.sel .n{font:800 22px var(--f-tit)}
+.sel .e{font-size:14px;color:var(--tinta2);margin-top:2px}
+.sel .pista{font-size:16px;margin-top:8px}
+.fila{display:flex;gap:8px}
+.fila button{flex:1;margin-top:10px}
+.lista{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.lista button{width:auto;min-width:48px;min-height:44px;margin:0;padding:6px 14px;border-radius:22px;font-size:17px}
+.lista button.on{background:linear-gradient(180deg,#f3d27a,#b88a2a);color:#24180a;border-color:var(--oro)}
+.lista button.muda{color:var(--rojo);border-style:dashed}
+select{font:500 16px var(--f-ui);width:100%;background:var(--panel);color:var(--tinta);border:1px solid var(--linea2);border-radius:12px;padding:12px;margin-top:10px}
+.cfg svg .hueco,.cfg svg .lt{cursor:pointer}
+.peligro{color:var(--rojo)!important;border-color:#6a3128!important}
+
+/* ── Horizontal: dos columnas. Izquierda mapa/hoja/diario; derecha el heroe y el
+   cartel sobre la ilustracion, con las opciones siempre a la vista ── */
+.horiz{flex:1;display:flex;min-height:0}
+.horiz .izq{flex:1 1 55%;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--linea)}
+.horiz .der{flex:1 1 45%;display:flex;flex-direction:column;min-width:0;max-width:500px;position:relative;overflow:hidden}
+.horiz .der>*{position:relative;z-index:1}
+.horiz .der>.fondo{position:absolute;inset:0;z-index:0;overflow:hidden;animation:aparece-e .6s ease-out both}
+.fondo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kb 22s ease-in-out infinite alternate}
+.fondo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,9,11,.5) 0%,rgba(21,16,19,.18) 32%,rgba(21,16,19,.62) 62%,rgba(21,16,19,.95) 100%)}
+.horiz .cartel .tt,.horiz .cartel .tx{text-shadow:0 1px 3px #000,0 0 14px rgba(0,0,0,.9)}
+.fondo.lucha::after{background:radial-gradient(90% 80% at 50% 30%,rgba(40,8,6,.35),rgba(21,16,19,.92)),linear-gradient(transparent 60%,var(--fondo))}
+.horiz .main{max-width:none;padding:8px 14px 10px}
+.horiz .tabs{max-width:none}
+.horiz .tabs button{min-height:38px;padding:4px}
+.horiz .acciones{max-width:none;padding:8px 12px 10px}
+.horiz .acciones button{min-height:46px;font-size:16px}
+.horiz .heroe{padding:7px 10px 7px 8px}
+.horiz .med{flex-basis:52px;width:52px;height:52px}
+.horiz .nombre{font-size:19px}
+.horiz .vida{margin-top:4px}
+.horiz .cartel{margin-top:8px}
+.horiz .cartel .tt{font-size:21px}
+.horiz .cartel .tx{font-size:17px;margin-top:5px}
+.horiz .cartel .cara{display:block;width:76px;height:76px;margin:0 auto 6px;border-radius:50%;object-fit:cover;
+ box-shadow:0 0 0 3px var(--k),0 6px 16px #000;background:var(--hueco)}
+.horiz .cartel .cosa{display:block;width:64px;height:64px;margin:0 auto 4px;filter:drop-shadow(0 6px 8px #000);animation:flota 3s ease-in-out infinite}
+.horiz .calma{margin-top:9px;padding:14px 10px}
+.horiz .mapa{margin-top:4px}
+.horiz .mapa svg{max-height:calc(100dvh - 160px)}
+.horiz .leyenda{margin-top:6px;font-size:13px;gap:4px 12px}
+.horiz h2:first-child{margin-top:8px}
+.horiz .acciones.muchas{grid-template-columns:repeat(3,1fr);gap:6px}
+.horiz .acciones.muchas button{min-height:40px;font-size:14.5px;padding:6px 4px}
+.horiz .dado{width:72px;height:72px;flex-basis:72px}
+.horiz .vidaB{position:static;margin:6px 0 0}
+@media (orientation:landscape) and (max-height:520px){
+ .top{padding:3px 10px;min-height:36px}
+ .top .fs{padding:2px 8px;font-size:18px}
+ .mid{padding:10px 24px}
+ .espera{width:130px;height:130px;margin:0 0 6px}
+ .espera .fig{left:34px;top:31px}
+ .espera.ok .aro{width:98px;height:98px}
+ .espera.ok .check{left:34px;top:34px}
+ .logo{font-size:44px}
+ .mid .grande{margin-top:10px}
+}
+
+/* ── Capas vivas sobre las ilustraciones (korum.js vivas()): tinte del cartel en
+   soft-light, niebla en screen, haces de luz, motas o brasas que suben y grano de
+   pelicula en overlay. Cada escena va aislada (isolation) para que las fusiones
+   solo mezclen con su imagen ── */
+.tinte,.niebla,.haces,.motas,.grano{position:absolute;inset:0;pointer-events:none}
+.tinte{z-index:1;background:radial-gradient(130% 100% at 50% 8%,color-mix(in srgb,var(--k) 75%,transparent),transparent 78%);
+ mix-blend-mode:soft-light}
+.lucha .tinte{background:radial-gradient(85% 80% at 50% 42%,transparent 25%,rgba(255,40,20,.95));mix-blend-mode:overlay;
+ animation:latido 2.3s ease-in-out infinite}
+@keyframes latido{0%,100%{opacity:.5}10%{opacity:1}22%{opacity:.6}34%{opacity:.92}}
+.niebla{z-index:1;inset:-10% -60%;opacity:.34;mix-blend-mode:screen;
+ background:radial-gradient(28% 38% at 30% 72%,rgba(235,225,205,.55),transparent 70%),radial-gradient(24% 32% at 68% 62%,rgba(205,215,235,.45),transparent 70%),
+  radial-gradient(20% 28% at 50% 90%,rgba(235,225,205,.4),transparent 70%);
+ animation:niebla 24s ease-in-out infinite alternate}
+@keyframes niebla{from{transform:translate3d(-13%,0,0)}to{transform:translate3d(13%,-4%,0)}}
+.lucha .niebla{opacity:.5;background:radial-gradient(28% 38% at 30% 85%,rgba(255,120,60,.5),transparent 70%),
+ radial-gradient(24% 32% at 70% 80%,rgba(255,80,40,.4),transparent 70%)}
+.haces{z-index:1;inset:-40% -20% 0 -20%;opacity:.6;mix-blend-mode:screen;transform-origin:20% 0;
+ background:repeating-conic-gradient(from 150deg at 20% 0%,transparent 0deg 5deg,rgba(255,236,196,.16) 7deg 9deg,transparent 12deg 17deg);
+ -webkit-mask:linear-gradient(180deg,#000 15%,transparent 80%);mask:linear-gradient(180deg,#000 15%,transparent 80%);
+ animation:haces 13s ease-in-out infinite alternate}
+@keyframes haces{from{transform:rotate(-4deg);opacity:.4}to{transform:rotate(5deg);opacity:.7}}
+.motas{z-index:3;overflow:hidden}
+.motas i{position:absolute;bottom:-8px;left:var(--x);width:calc(4px * var(--s));height:calc(4px * var(--s));border-radius:50%;
+ background:#ffe6a8;box-shadow:0 0 6px 1px rgba(255,214,120,.8);opacity:0;mix-blend-mode:screen;
+ animation:mota var(--d) linear var(--r) infinite}
+@keyframes mota{0%{transform:translate3d(0,0,0);opacity:0}15%{opacity:.85}75%{opacity:.55}100%{transform:translate3d(26px,-270px,0);opacity:0}}
+.motas.lucha i{background:#ffb070;box-shadow:0 0 8px 2px rgba(255,90,30,.9)}
+.motas.pnj i{background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7)}
+.motas.cosa{z-index:1}
+.motas.cosa i{background:var(--k);box-shadow:0 0 8px var(--k)}
+.motas.portada i{background:#ffbe78;box-shadow:0 0 8px 2px rgba(255,120,40,.8);animation-name:mota-alta}
+@keyframes mota-alta{0%{transform:translate3d(0,0,0);opacity:0}12%{opacity:.8}80%{opacity:.4}100%{transform:translate3d(-30px,-75vh,0);opacity:0}}
+.grano{z-index:3;opacity:.14;mix-blend-mode:overlay;background-size:180px;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.escena,.fondo,.portada{isolation:isolate}
+.escena::after{z-index:2}
+.escena .esc-tt,.escena .retrato,.escena .vidaB{z-index:4}
+.escena.lucha .bicho{z-index:2}
+.fondo::after{z-index:2}
+.portada .niebla{opacity:.28}
+.portada::after{z-index:2}
+
+/* ── El heroe vivo: un brillo que da vueltas al aro del medallon ── */
+.med::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+ background:conic-gradient(from 0deg,transparent 0 60%,rgba(255,246,214,.9) 72%,transparent 84%);
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));
+ mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));animation:gira 5.5s linear infinite}
+.n-hp,.n-oro,.n-hpb{font-style:normal;font-variant-numeric:tabular-nums}
+.vidaB .bar i{animation:llena .9s cubic-bezier(.2,.7,.3,1) .35s both}
+@keyframes llena{from{width:0}}
+/* poca vida: el borde de la pantalla late en rojo */
+.peligro-v{position:absolute;inset:0;z-index:6;pointer-events:none;box-shadow:inset 0 0 80px rgba(200,20,10,.6);
+ animation:peligro 1.3s ease-in-out infinite}
+@keyframes peligro{50%{opacity:.3}}
+
+/* ── Pestanas: la nueva entra por el lado al que vas (tambien deslizando el dedo) ── */
+.main.entra-dch{animation:entra-dch .32s cubic-bezier(.2,.7,.3,1) both}
+.main.entra-izq{animation:entra-izq .32s cubic-bezier(.2,.7,.3,1) both}
+@keyframes entra-dch{from{opacity:0;transform:translateX(30px)}}
+@keyframes entra-izq{from{opacity:0;transform:translateX(-30px)}}
+.tabs button.pulsa{background:rgba(217,174,69,.08)}
+.tabs button.on{text-shadow:0 0 12px rgba(246,220,140,.45)}
+.top .fs.pulsa,.top .fs:active{background:var(--panel2);transform:scale(.9)}
+
+/* ── Crear: la carta tocada sube con un aro de oro y un check ── */
+.cartas button[aria-busy=true]{background:var(--hueco)!important;transform:translateY(-6px) scale(1.02);
+ box-shadow:0 0 0 3px var(--oro),0 0 34px rgba(217,174,69,.6),0 14px 30px rgba(0,0,0,.6)!important}
+.cartas button[aria-busy=true]::before{position:absolute;top:8px;right:8px;z-index:3;margin:0;width:30px;height:30px;border-radius:50%;
+ -webkit-mask:none;mask:none;background:var(--oro) var(--m-check-osc) center/18px no-repeat;box-shadow:0 2px 8px #000}
+.cartas button[aria-busy=true]::after{z-index:3}
+.cartas button.pulsa{transform:scale(.97)}
+
+/* ── Configurar la mesa: lo que se toca en el dibujo ── */
+.cfg [data-pulsa]{transition:transform .15s,opacity .15s;transform-box:fill-box;transform-origin:center}
+.cfg [data-pulsa].pulsa{transform:scale(.92);opacity:.8}
+
+/* ── Preguntar antes de algo sin vuelta atras: una hoja que sube ── */
+.pide{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center}
+.pide-fondo{position:absolute;inset:0;background:rgba(6,4,5,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+ animation:aparece-e .25s ease-out both}
+.pide-caja{position:relative;width:100%;max-width:520px;margin:0 10px calc(10px + var(--sa-b));padding:20px 18px 12px;border-radius:22px;
+ background:linear-gradient(180deg,#2c231c,#1b1512);border:1px solid var(--linea2);box-shadow:0 -10px 50px rgba(0,0,0,.7);
+ animation:sube-hoja .34s cubic-bezier(.2,.8,.3,1) both}
+@keyframes sube-hoja{from{transform:translateY(110%)}}
+.pide h3{margin:0 0 6px;font:700 22px var(--f-tit);letter-spacing:.03em}
+.pide p{margin:0;color:var(--tinta2);font:400 17px/1.45 var(--f-txt)}
+.pide.fuera .pide-caja{animation:baja-hoja .24s ease-in forwards}
+.pide.fuera .pide-fondo{animation:scr-sale .24s forwards}
+@keyframes baja-hoja{to{transform:translateY(110%)}}
+
+/* ── Efectos de la capa #fx que faltaban: onda de la tirada, tajo, critico ── */
+#fx .onda-g{position:absolute;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;border-radius:50%;
+ background:radial-gradient(circle,transparent 58%,color-mix(in srgb,var(--rc) 40%,transparent) 66%,color-mix(in srgb,var(--rc) 12%,transparent) 69%,transparent 71%);
+ transform:scale(.03);animation:onda-g 1.25s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes onda-g{0%{transform:scale(.03);opacity:1}100%{transform:scale(1);opacity:0}}
+#fx .velo.crit{background:radial-gradient(ellipse at center,transparent 35%,rgba(255,205,90,.5))}
+#fx .tajo{position:absolute;overflow:hidden}
+#fx .tajo i{position:absolute;left:-10%;top:50%;width:120%;height:7px;margin-top:-3px;border-radius:4px;
+ background:linear-gradient(90deg,transparent,#fff 35%,#ffe2b0 65%,transparent);box-shadow:0 0 18px #fff,0 0 40px #ff8a50;
+ transform-origin:0 50%;animation:tajo .45s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes tajo{0%{transform:rotate(-22deg) scaleX(0);opacity:1}55%{transform:rotate(-22deg) scaleX(1);opacity:1}100%{transform:rotate(-22deg) scaleX(1);opacity:0}}
+
+/* Las fotos del catalogo (Chrome sin ventana no avanza las animaciones): sin
+   animaciones, y lo que empieza escondido, ya en su sitio final */
+.foto *,.foto *::before,.foto *::after{animation:none!important;transition:none!important}
+.foto .tirada .cuentas{opacity:1}
+.foto .motas i{opacity:.75;bottom:calc(var(--s) * 52%)}
+.foto .motas.portada i{bottom:calc(var(--s) * 60%)}
+.foto button.op::after,.foto .grande::after,.foto #nombreOk::after{display:none}
+.foto .onda-caja,.foto .onda-g{display:none}
+.foto .cruz circle,.foto .cruz path,.foto .espera.ok .aro circle,.foto .espera.ok .check path{stroke-dashoffset:0}
+.foto .espera.ok .fig{opacity:0}
+.foto .espera.ok .check,.foto .espera.ok .brillo{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01s!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01s!important}
+ .rueda{animation:gira 3s linear infinite!important}
+}
+
+/* El panel de la maqueta (solo con ?maqueta) */
+.maq{position:fixed;left:calc(var(--sa-l) + 4px);top:42%;z-index:60;display:flex;flex-direction:column;gap:4px;font:700 11px var(--f-ui)}
+.maq button{width:auto;min-height:0;margin:0;padding:6px 8px;font-size:11px;border-radius:8px;opacity:.85;letter-spacing:.06em}
+.maq .abrir{background:#3a2c55;color:#e5dcff;box-shadow:none}
+.toast i svg,.diario li i svg{width:14px;height:14px;margin:0}
+.diario li i{display:grid;place-items:center}

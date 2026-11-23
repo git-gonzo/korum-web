@@ -166,8 +166,26 @@
     // ---- V. En vertical ----
     V2: { st: null, nom: 'ELIA', tab: 'juego' },
     V3: { st: null, nom: 'ELIA', tab: 'juego' },
-    V1: { st: con({ j: MI_TURNO, mapa: { mover: 1 }, ca: X({ ar: 'LocAldea' }, ca('TU TURNO', 'Dia 2. Estas en Aldea.', ['Quedarme'], 4)) }), tab: 'juego' }
+    V1: { st: con({ j: MI_TURNO, mapa: { mover: 1 }, ca: X({ ar: 'LocAldea' }, ca('TU TURNO', 'Dia 2. Estas en Aldea.', ['Quedarme'], 4)) }), tab: 'juego' },
+    // ---- K. Estados de los botones y tiradas (ronda 2 del diseno) ----
+    // K1: has tocado Atacar y la mesa aun no contesta (enviando; las demas apagadas; Heroe/Mesa bloqueados)
+    K1: { st: null, fn: function () { window.opElegida = 0; window.opElegidaS = window.st.ca.s; window.pinta(); } },
+    K2: { st: con({ j: MI_TURNO, mapa: { yo: 2, descubre: 2, color: '#65e67c', nombre: 'Bosque' },
+           ca: X({ ar: 'LocBosque' }, ca('EXITO', 'd20 20 +2 = 22 contra 12. El porton salta de sus goznes. +40 XP. +30 de oro.', ['Seguir'], 4)) }) },
+    K3: { st: con({ j: MI_TURNO, mapa: { yo: 2, descubre: 2, color: '#65e67c', nombre: 'Bosque' },
+           ca: X({ ar: 'LocBosque' }, ca('FRACASO', 'd20 1 +2 = 3 contra 12. Resbalas y te das con el porton en la cara. -4 PV.', ['Seguir'], 2)) }) },
+    // K4: soltar la figura: la hoja que pregunta
+    K4: { st: con({ j: TURNO_OTRO, ca: esp('ESPERA', 'Dia 2. Juega BRAN.', 1) }), tab: 'hoja',
+          fn: function () { var b = document.getElementById('soltar'); if (b) b.click(); } },
+    // K5: la rueda de ajustes abierta en el juego (interruptor del sonido, recargar)
+    K5: { st: null, aj: 1, tab: 'juego' },
+    // K6: poca vida: el borde late en rojo
+    K6: { st: null, tab: 'juego' }
   };
+  P.K1.st = P.F1.st;
+  P.K5.st = P.E8.st;
+  P.K6.st = JSON.parse(JSON.stringify(P.E8.st));
+  P.K6.st.h.hp = 4;
   P.A8.st = P.C1.st;
   P.C7.st = P.C1.st;
   P.V2.st = P.C1.st;
@@ -177,8 +195,7 @@
   var id = (location.search.match(/catalogo=([A-Z0-9]+)/) || [])[1];
   if (!id) { console.log('catalogo: ' + Object.keys(P).join(' ')); return; }
   var p = P[id];
-  // Las fotos se sacan sirviendo la carpeta del repo entera: el arte esta en SD/korum/movil
-  window.ARTE_BASE = '/SD/korum/movil/';
+  // KorumWeb: el arte esta al lado, en art/ (no hace falta cambiar ARTE_BASE)
   document.documentElement.className += ' foto';
   try {
     localStorage.setItem('korum_movil_tab', p.tab || 'mapa');
@@ -205,6 +222,7 @@
         me.onmessage({ data: JSON.stringify(antes) });
       }
       me.onmessage({ data: JSON.stringify(p.st) });
+      if (p.fn) setTimeout(p.fn, 30);
     }, 50);
   };
   Fake.prototype.close = function () {};
